@@ -1,0 +1,14 @@
+networks:
+  gimp:
+    url: irc.gnome.org
+    port: 6667
+    nick: gitlabirced
+    sasl: false
+    pass: notapassword
+  freenode:
+    url: irc.freenode.org
+    port: 6667
+    nick: gitlabirced
+    sasl: false
+    pass: notapassword
+
