@@ -13,46 +13,69 @@ class MyHTTPServer(HTTPServer):
         self.bots = bots
 
 
+class RequestException(Exception):
+    def __init__(self, code, status):
+        self.code = code
+        self.status = status
+        logging.error('%s - %s' % (self.code, self.status))
+
+
 class RequestHandler(BaseHTTPRequestHandler):
     """A POST request handler."""
 
-    def do_POST(self):
-        hooks = self.server.hooks
-        token = self.server.token
-        print(hooks)
-        logging.info("Hook received")
-
-        # get payload
-        header_length = int(self.headers.get('content-length', "0"))
-        json_payload = self.rfile.read(header_length)
-        print(json_payload)
-        json_params = {}
-        if len(json_payload) > 0:
-            json_params = json.loads(json_payload)
-
+    def _check_token(self):
         # get gitlab secret token
         gitlab_token_header = self.headers.get('X-Gitlab-Token')
 
-        # get project homepage
-        project = json_params['project']['homepage']
+        if not gitlab_token_header:
+            raise RequestException(400, "'X-Gitlab-Token' header not found")
 
-        # get command and token from config file
-        gitlab_token = str(token)
-
-        logging.info("Load project '%s'", project)
+        # get token from config file
+        gitlab_token = str(self.server.token)
 
         # Check if the gitlab token is valid
-        print(gitlab_token_header, gitlab_token)
-        if gitlab_token_header == gitlab_token:
-            logging.info('TOKEN VALID')
-            self._handle_push(json_params)
-            # TODO: send response on handlers, and send errors when
-            # undefined
-            self.send_response(200, "OK")
-        else:
-            logging.error("Not authorized, Gitlab_Token not authorized")
-            self.send_response(401, "Gitlab Token not authorized")
-        self.end_headers()
+        if gitlab_token_header != gitlab_token:
+            raise RequestException(401, "Gitlab token not authorized")
+
+    def _check_and_get_request_data(self):
+        # get payload
+        header_length = int(self.headers.get('content-length', "0"))
+        json_payload = self.rfile.read(header_length)
+
+        if len(json_payload) == 0:
+            raise RequestException(400, "Request didn't contain data")
+
+        try:
+            json_params = json.loads(json_payload)
+        except json.decoder.JSONDecodeError:
+            raise RequestException(400, "JSON data couldn't be parsed")
+
+        object_kind = json_params.get('object_kind')
+        if not object_kind:
+            raise RequestException(400, "Missing 'object_kind'")
+
+        if object_kind not in ['push', 'issue', 'merge_request']:
+            raise RequestException(400, "object_kind '%s' not supported" %
+                                   object_kind)
+        return json_params
+
+    def do_POST(self):
+        hooks = self.server.hooks
+        print(hooks)
+        logging.info("Hook received")
+
+        try:
+            self._check_token()
+            json_params = self._check_and_get_request_data()
+            handler = getattr(
+                self, '_handle_%s' % json_params.get('object_kind'))
+            handler(json_params)
+        except RequestException as re:
+            self.send_response(re.code, re.status)
+        except Exception:
+            self.send_response(500, "Internal server error")
+        finally:
+            self.end_headers()
 
     def _handle_push(self, json_params):
         print('handling push')
@@ -76,3 +99,4 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             else:
                 print("not found", project)
+        self.send_response(200, "OK")
