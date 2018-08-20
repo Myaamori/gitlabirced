@@ -14,6 +14,8 @@ import yaml
 
 import logging
 
+from .irc_client import MyIRCClient, connect_networks
+
 @click.command()
 @click.argument('config-file', nargs=1)
 def main(config_file):
@@ -63,68 +65,8 @@ def parse_hooks(hooks):
     print(hooks)
     return hooks
 
-from multiprocessing import Process
-
-def connect_networks(networks):
-    """ Connects to all the networks configured in the config file.
-
-    Returns a dictionary using the same keys as in the config file
-    containing process and bot object.
-    """
-
-    print("conf taken %s " % networks)
-    result = {}
-    all_bots = []
-    all_threads = []
-    for net in networks:
-        server = networks[net]['url']
-        port = networks[net]['port']
-        nick = networks[net]['nick']
-        # TODO: get better the channels to connect for a given network
-        channel = '##ironfoot'
-
-        # TODO: Pass all the channels here, to connect later
-        bot = MyIRCClient(channel, nick, server, net, port)
-        bot.connect(server, port, nick)
-        print("Starting %s" % server)
-        thread = Process(target=bot.start)
-        thread.start()
-
-        result[net] = {
-            'process': thread,
-            'bot': bot
-        }
-
-    return result
-
 if __name__ == "__main__":
     sys.exit(main())  # pragma: no cover
-
-
-import irc.strings
-from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
-
-
-class MyIRCClient(irc.client.SimpleIRCClient):
-    def __init__(self, channel, nickname, server, net_name, port=6667):
-        irc.client.SimpleIRCClient.__init__(self)
-        self.channel = channel
-        self.nickname = nickname
-        self.server = server
-        self.net_name = net_name
-        self.port = port
-
-    def on_welcome(self, connection, event):
-        connection.join(self.channel)
-
-    def on_disconnect(self, connection, event):
-        sys.exit(0)
-
-    def on_pubmsg(self, c, e):
-        print('on pubmsg')
-        print('received via', self.net_name)
-        print(c, e)
-
 
 class MyHTTPServer(HTTPServer):
 
