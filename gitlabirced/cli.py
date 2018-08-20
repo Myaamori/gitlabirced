@@ -23,8 +23,10 @@ def main(config_file):
             print("Configuration loaded %s" % config)
     except yaml.YAMLError as exc:
         print(exc)
+        sys.exit(1)
     except IOError:
         print("File %s not found" % config_file)
+        sys.exit(3)
 
     all_bots = connect_networks(config['networks'])
 
