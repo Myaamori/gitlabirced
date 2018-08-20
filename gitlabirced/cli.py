@@ -47,6 +47,7 @@ def main(config_file):
     def signal_handler(sig, frame):
         print('You pressed Ctrl+C!')
         for b in all_bots:
+            all_bots[b]['bot'].reactor.disconnect_all()
             all_bots[b]['process'].terminate()
         click.Abort()
         sys.exit(0)
@@ -79,9 +80,12 @@ def connect_networks(networks):
         server = networks[net]['url']
         port = networks[net]['port']
         nick = networks[net]['nick']
+        # TODO: get better the channels to connect for a given network
         channel = '##ironfoot'
 
-        bot = TestBot(channel, nick, server, net, port)
+        # TODO: Pass all the channels here, to connect later
+        bot = MyIRCClient(channel, nick, server, net, port)
+        bot.connect(server, port, nick)
         print("Starting %s" % server)
         thread = Process(target=bot.start)
         thread.start()
@@ -97,81 +101,29 @@ if __name__ == "__main__":
     sys.exit(main())  # pragma: no cover
 
 
-import irc.bot
 import irc.strings
 from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
 
 
-class TestBot(irc.bot.SingleServerIRCBot):
+class MyIRCClient(irc.client.SimpleIRCClient):
     def __init__(self, channel, nickname, server, net_name, port=6667):
-        # TODO pass here the watchers configuration
-        irc.bot.SingleServerIRCBot.__init__(
-            self, [(server, port)], nickname, nickname)
+        irc.client.SimpleIRCClient.__init__(self)
         self.channel = channel
+        self.nickname = nickname
+        self.server = server
         self.net_name = net_name
+        self.port = port
 
-    def on_nicknameinuse(self, c, e):
-        c.nick(c.get_nickname() + "_")
+    def on_welcome(self, connection, event):
+        connection.join(self.channel)
 
-    def on_welcome(self, c, e):
-        c.join(self.channel)
-
-    def on_privmsg(self, c, e):
-        self.do_command(e, e.arguments[0])
+    def on_disconnect(self, connection, event):
+        sys.exit(0)
 
     def on_pubmsg(self, c, e):
         print('on pubmsg')
         print('received via', self.net_name)
         print(c, e)
-        # TODO: detect the channel, check watchers configuration, and act on consequence
-        a = e.arguments[0].split(":", 1)
-        if len(a) > 1 and irc.strings.lower(a[0]) == irc.strings.lower(
-                self.connection.get_nickname()):
-            self.do_command(e, a[1].strip())
-        return
-
-    def on_dccmsg(self, c, e):
-        # non-chat DCC messages are raw bytes; decode as text
-        text = e.arguments[0].decode('utf-8')
-        c.privmsg("You said: " + text)
-
-    def on_dccchat(self, c, e):
-        if len(e.arguments) != 2:
-            return
-        args = e.arguments[1].split()
-        if len(args) == 4:
-            try:
-                address = ip_numstr_to_quad(args[2])
-                port = int(args[3])
-            except ValueError:
-                return
-            self.dcc_connect(address, port)
-
-    def do_command(self, e, cmd):
-        nick = e.source.nick
-        c = self.connection
-
-        if cmd == "disconnect":
-            self.disconnect()
-        elif cmd == "die":
-            self.die()
-        elif cmd == "stats":
-            for chname, chobj in self.channels.items():
-                c.notice(nick, "--- Channel statistics ---")
-                c.notice(nick, "Channel: " + chname)
-                users = sorted(chobj.users())
-                c.notice(nick, "Users: " + ", ".join(users))
-                opers = sorted(chobj.opers())
-                c.notice(nick, "Opers: " + ", ".join(opers))
-                voiced = sorted(chobj.voiced())
-                c.notice(nick, "Voiced: " + ", ".join(voiced))
-        elif cmd == "dcc":
-            dcc = self.dcc_listen()
-            c.ctcp("DCC", nick, "CHAT chat %s %d" % (
-                ip_quad_to_numstr(dcc.localaddress),
-                dcc.localport))
-        else:
-            c.notice(nick, "Not understood: " + cmd)
 
 
 class MyHTTPServer(HTTPServer):
@@ -229,6 +181,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
     
     def _handle_push(self, json_params):
+        print('handling push')
         hooks = self.server.hooks
         token = self.server.token
         bots = self.server.bots
@@ -243,7 +196,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     if 'push' in reports[r]:
                         print('sending to %s, in network %s' % (r, network))
                         #bot.privmsg(r, 'pushhhh')
-                        bot.connection.privmsg("##ironfoot", "pushh")
+                        bot.connection.privmsg(r, "pushh")
 
             else:
                 print("not found", project)
