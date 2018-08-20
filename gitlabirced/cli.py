@@ -5,13 +5,11 @@ import signal
 import sys
 import click
 
-import irc
 import yaml
 
-import logging
-
-from .irc_client import MyIRCClient, connect_networks
+from .irc_client import connect_networks
 from .http_server import MyHTTPServer, RequestHandler
+
 
 @click.command()
 @click.argument('config-file', nargs=1)
@@ -28,7 +26,6 @@ def main(config_file):
     except IOError:
         print("File %s not found" % config_file)
 
-    bots = []
     all_bots = connect_networks(config['networks'])
 
     hooks = parse_hooks(config['hooks'])
@@ -36,7 +33,8 @@ def main(config_file):
 
     def run_server(addr, port):
         """Start a HTTPServer which waits for requests."""
-        httpd = MyHTTPServer(token, hooks, all_bots, (addr, port), RequestHandler)
+        httpd = MyHTTPServer(token, hooks, all_bots, (addr, port),
+                             RequestHandler)
         httpd.serve_forever()
         print('serving')
 
@@ -61,6 +59,7 @@ def parse_hooks(hooks):
     print('parsing hooks')
     print(hooks)
     return hooks
+
 
 if __name__ == "__main__":
     sys.exit(main())  # pragma: no cover
