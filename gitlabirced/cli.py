@@ -191,7 +191,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                 print('project found!!')
                 network = h['network']
                 reports = h['reports']
+                branches = h['branches'].split()
                 bot = bots[network]['bot']
+                branch = json_params['ref'][11:]
+                if branch not in branches:
+                    continue
                 for r in reports:
                     if 'push' in reports[r]:
                         print('sending to %s, in network %s' % (r, network))
