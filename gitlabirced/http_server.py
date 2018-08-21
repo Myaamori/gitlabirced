@@ -81,7 +81,47 @@ class RequestHandler(BaseHTTPRequestHandler):
         print('handling push')
         hooks = self.server.hooks
         bots = self.server.bots
-        project = json_params['project']['path_with_namespace']
+
+        try:
+            project = json_params['project']['path_with_namespace']
+            project_name = json_params['project']['name']
+            user = json_params['user_username']
+            commits = json_params['commits']
+            num_commits = json_params.get('total_commits_count')
+            branch_name = json_params['ref']
+            ref_after = json_params['after']
+            ref_prefix = 'refs/heads/'
+            if branch_name.startswith(ref_prefix):
+                branch_name = branch_name[len(ref_prefix):]
+        except KeyError:
+            raise RequestException(400, "Missing data in the request")
+
+        if not num_commits:
+            # Branch created or deleted
+            action = 'created'
+            if ref_after == '0000000000000000000000000000000000000000':
+                action = 'deleted'
+            msg = ('{user} {action} branch {branch_name} on {project_name}.'
+                   .format(user=user, action=action,
+                           branch_name=branch_name,
+                           project_name=project_name))
+        else:
+            last_commit = commits[-1]
+            last_commit_msg = last_commit['message'].split('\n')[0]
+            pre_msg = ('{user} pushed on {project_name}@{branch_name}:'
+                       .format(user=user, project_name=project_name,
+                               branch_name=branch_name))
+            if num_commits == 1:
+                msg = ('{pre_msg} {last_commit_msg}'
+                       .format(pre_msg=pre_msg,
+                               last_commit_msg=last_commit_msg))
+            else:
+                msg = ('{pre_msg} {num_commits} commits (last: '
+                       '{last_commit_msg})'
+                       .format(pre_msg=pre_msg,
+                               num_commits=num_commits,
+                               last_commit_msg=last_commit_msg))
+
         for h in hooks:
             if h['project'] == project:
                 print('project found!!')
@@ -89,13 +129,12 @@ class RequestHandler(BaseHTTPRequestHandler):
                 reports = h['reports']
                 branches = h['branches'].split()
                 bot = bots[network]['bot']
-                branch = json_params['ref'][11:]
-                if branch not in branches:
+                if branch_name not in branches:
                     continue
                 for r in reports:
                     if 'push' in reports[r]:
                         print('sending to %s, in network %s' % (r, network))
-                        bot.connection.privmsg(r, "pushh")
+                        bot.connection.privmsg(r, msg)
 
             else:
                 print("not found", project)
