@@ -1,5 +1,12 @@
 image: python:3.6
 
+tests:
+  stage: test
+  script:
+  - pip3 install tox
+  - make test
+  - make lint
+
 docs:
   stage: test
   script:

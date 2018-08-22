@@ -1,7 +1,6 @@
 import http.client
-import os
 import sys
-from test import support
+import threading
 import unittest
 
 from gitlabirced.http_server import MyHTTPServer, RequestHandler
@@ -9,9 +8,7 @@ from gitlabirced.http_server import MyHTTPServer, RequestHandler
 
 class BaseServerTestCase(unittest.TestCase):
     def setUp(self):
-        self._threads = support.threading_setup()
-        os.environ = support.EnvironmentVarGuard()
-        self.server_started = support.threading.Event()
+        self.server_started = threading.Event()
         self.thread = TestServerThread(self)
         self.thread.start()
 
@@ -22,8 +19,6 @@ class BaseServerTestCase(unittest.TestCase):
     def tearDown(self):
         self.thread.stop()
         self.thread = None
-        os.environ.__exit__()
-        support.threading_cleanup(*self._threads)
 
     def request(self, uri, method='GET', body=None, headers={}):
         self.connection = http.client.HTTPConnection(self.HOST, self.PORT)
@@ -31,9 +26,9 @@ class BaseServerTestCase(unittest.TestCase):
         return self.connection.getresponse()
 
 
-class TestServerThread(support.threading.Thread):
+class TestServerThread(threading.Thread):
     def __init__(self, test_object):
-        support.threading.Thread.__init__(self)
+        threading.Thread.__init__(self)
         self.test_object = test_object
 
     def run(self):
