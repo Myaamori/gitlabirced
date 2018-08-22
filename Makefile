@@ -51,18 +51,12 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 lint: ## check style with flake8
-	flake8 gitlabirced tests
+	tox -eflake8
 
-test: ## run tests quickly with the default Python
-	py.test
+test: ## run tests using tox
+	tox -etests
 
-test-all: ## run tests on every Python version with tox
-	tox
-
-coverage: ## check code coverage quickly with the default Python
-	coverage run --source gitlabirced -m pytest
-	coverage report -m
-	coverage html
+coverage: test ## check code coverage
 	$(BROWSER) htmlcov/index.html
 
 docs: ## generate Sphinx HTML documentation, including API docs
