@@ -13,7 +13,7 @@ tests:
 
 docs:
   stage: test
-  coverage: '/TOTAL +\d+ +\d+ +(\d+\.\d+)%/'
+  coverage: '/TOTAL +\d+ +\d+ +(\d+)%/'
   script:
   - pip3 install sphinx
   - make docs
