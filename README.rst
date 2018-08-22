@@ -9,6 +9,9 @@ GitlabIRCed
 .. image:: https://gitlab.com/palvarez89/gitlabirced/badges/master/pipeline.svg
         :target: https://gitlab.com/palvarez89/gitlabirced/commits/master
 
+.. image:: https://gitlab.com/palvarez89/gitlabirced/badges/master/coverage.svg?job=tests
+        :target: https://gitlab.com/palvarez89/gitlabirced/commits/master
+
 .. image:: https://readthedocs.org/projects/gitlabirced/badge/?version=latest
         :target: https://gitlabirced.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
