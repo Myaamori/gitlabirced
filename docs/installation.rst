@@ -32,13 +32,13 @@ You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/palvarez89/gitlabirced
+    $ git clone https://gitlab.com/palvarez89/gitlabirced
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl  -OL https://github.com/palvarez89/gitlabirced/tarball/master
+    $ curl  -OL https://gitlab.com/palvarez89/gitlabirced/-/archive/master/gitlabirced-master.tar
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://github.com/palvarez89/gitlabirced
-.. _tarball: https://github.com/palvarez89/gitlabirced/tarball/master
+.. _GitLab repo: https://gitlab.com/palvarez89/gitlabirced
+.. _tarball: https://gitlab.com/palvarez89/gitlabirced/-/archive/master/gitlabirced-master.tar
