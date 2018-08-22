@@ -1,10 +1,8 @@
-import unittest
 import http.client
 import urllib.parse
 import json
 
 from helpers_http_server import BaseServerTestCase
-from gitlabirced.http_server import MyHTTPServer, RequestHandler
 
 
 class BaseHTTPServerTestCase(BaseServerTestCase):

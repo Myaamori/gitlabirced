@@ -1,12 +1,8 @@
-import unittest
-import pytest
-
-from test import support
-threading = support.import_module('threading')
-
 import http.client
 import os
 import sys
+from test import support
+import unittest
 
 from gitlabirced.http_server import MyHTTPServer, RequestHandler
 
@@ -15,7 +11,7 @@ class BaseServerTestCase(unittest.TestCase):
     def setUp(self):
         self._threads = support.threading_setup()
         os.environ = support.EnvironmentVarGuard()
-        self.server_started = threading.Event()
+        self.server_started = support.threading.Event()
         self.thread = TestServerThread(self)
         self.thread.start()
 
@@ -35,9 +31,9 @@ class BaseServerTestCase(unittest.TestCase):
         return self.connection.getresponse()
 
 
-class TestServerThread(threading.Thread):
+class TestServerThread(support.threading.Thread):
     def __init__(self, test_object):
-        threading.Thread.__init__(self)
+        support.threading.Thread.__init__(self)
         self.test_object = test_object
 
     def run(self):
@@ -49,7 +45,8 @@ class TestServerThread(threading.Thread):
                                    ('localhost', 0),
                                    RequestHandler)
 
-        self.test_object.HOST, self.test_object.PORT = self.server.socket.getsockname()
+        self.test_object.HOST, self.test_object.PORT = (
+            self.server.socket.getsockname())
         sys.stderr.write('thread started\n')
         sys.stderr.write('HOST %s\n' % self.test_object.HOST)
         sys.stderr.write('PORT %s\n' % self.test_object.PORT)
