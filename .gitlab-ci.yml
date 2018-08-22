@@ -1,0 +1,11 @@
+image: python:3.6
+
+docs:
+  stage: test
+  script:
+  - pip3 install sphinx
+  - make docs
+  - mv docs/_build/html/ public
+  artifacts:
+    paths:
+    - public/
