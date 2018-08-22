@@ -11,6 +11,7 @@ class MyHTTPServer(HTTPServer):
         self.token = token
         self.hooks = hooks
         self.bots = bots
+        self.issue_last_action = {}
 
 
 class RequestException(Exception):
@@ -71,16 +72,16 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self, '_handle_%s' % json_params.get('object_kind'))
             handler(json_params)
         except RequestException as re:
+            logging.error(re.status)
             self.send_response(re.code, re.status)
         except Exception:
+            logging.exception("Internal server error")
             self.send_response(500, "Internal server error")
         finally:
             self.end_headers()
 
     def _handle_push(self, json_params):
         print('handling push')
-        hooks = self.server.hooks
-        bots = self.server.bots
 
         try:
             project = json_params['project']['path_with_namespace']
@@ -107,7 +108,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                            project_name=project_name))
         else:
             last_commit = commits[-1]
-            last_commit_msg = last_commit['message'].split('\n')[0]
+            last_commit_msg = last_commit['message'].split('\n')[0].strip()
             pre_msg = ('{user} pushed on {project_name}@{branch_name}:'
                        .format(user=user, project_name=project_name,
                                branch_name=branch_name))
@@ -122,6 +123,62 @@ class RequestHandler(BaseHTTPRequestHandler):
                                num_commits=num_commits,
                                last_commit_msg=last_commit_msg))
 
+        self._send_message_to_all('push', project, msg, branch_name)
+
+    def _handle_issue(self, json_params):
+        print('handling issue')
+
+        try:
+            user = json_params['user']['username']
+            project_name = json_params['project']['name']
+            project = json_params['project']['path_with_namespace']
+            issue = json_params['object_attributes']
+            issue_number = issue['iid']
+            issue_title = issue['title'].strip()
+            issue_action = issue['action']
+            url = issue['url']
+        except KeyError:
+            raise RequestException(400, "Missing data in the request")
+
+        # Don't trigger the hook on issue's update
+        if issue_action == 'update':
+            self.send_response(200, "OK")
+            return
+
+        project_issue_n = '{project}-{issue_number}'.format(
+            project=project,
+            issue_number=issue_number)
+
+        last_action = self.server.issue_last_action.get(project_issue_n)
+
+        # Don't trigger repeated events.
+        if issue_action == last_action:
+            self.send_response(200, "OK")
+            return
+
+        # Update last action on this issue
+        self.server.issue_last_action[project_issue_n] = issue_action
+
+        display_action = self.simple_past(issue_action)
+
+        msg = ('{user} {display_action} issue #{issue_number} '
+               '({issue_title}) on {project_name} {url}'
+               .format(user=user, display_action=display_action,
+                       issue_number=issue_number, issue_title=issue_title,
+                       project_name=project_name, url=url))
+
+        self._send_message_to_all('issue', project, msg)
+
+    @staticmethod
+    def simple_past(verb):
+        if not verb.endswith('e'):
+            verb = verb + 'e'
+        verb = verb + 'd'
+        return verb
+
+    def _send_message_to_all(self, kind, project, msg, branch=None):
+        hooks = self.server.hooks
+        bots = self.server.bots
         for h in hooks:
             if h['project'] == project:
                 print('project found!!')
@@ -129,10 +186,10 @@ class RequestHandler(BaseHTTPRequestHandler):
                 reports = h['reports']
                 branches = h['branches'].split()
                 bot = bots[network]['bot']
-                if branch_name not in branches:
+                if branch and branch not in branches:
                     continue
                 for r in reports:
-                    if 'push' in reports[r]:
+                    if kind in reports[r]:
                         print('sending to %s, in network %s' % (r, network))
                         bot.connection.privmsg(r, msg)
 
