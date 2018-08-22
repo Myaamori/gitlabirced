@@ -22,17 +22,6 @@ docs:
     paths:
     - public/
 
-mock-deploy-pypi:
-  stage: test
-  variables:
-    TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
-  script:
-  - pip3 install twine
-  - make release
-  only:
-    refs:
-    - master
-
 deploy-pypi:
   stage: deploy
   script:
