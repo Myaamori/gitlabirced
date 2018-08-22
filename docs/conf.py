@@ -160,4 +160,16 @@ texinfo_documents = [
 ]
 
 
+# -- Options for Sphinx API doc ----------------------------------------------
+# run api doc
+def run_apidoc(_):
+    from sphinx.ext.apidoc import main
 
+    cur_dir = os.path.normpath(os.path.dirname(__file__))
+    output_path = os.path.join(cur_dir, 'api')
+    modules = os.path.normpath(os.path.join(cur_dir, "../gitlabirced"))
+    main(['-f', '-M', '-H', 'API Documentation', '-o', cur_dir, modules])
+
+# launch setup
+def setup(app):
+    app.connect('builder-inited', run_apidoc)
