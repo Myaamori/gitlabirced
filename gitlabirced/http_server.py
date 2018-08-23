@@ -169,6 +169,40 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         self._send_message_to_all('issue', project, msg)
 
+    def _handle_merge_request(self, json_params):
+        try:
+            user = json_params['user']['username']
+            request = json_params['object_attributes']
+            project = request['target']['path_with_namespace']
+            project_name = request['target']['name']
+            from_branch = request['source_branch']
+            to_branch = request['target_branch']
+
+            request_number = request['iid']
+            request_title = request['title'].strip()
+            request_action = request['action']
+            url = request['url']
+        except KeyError as e:
+            print(e)
+            raise RequestException(400, "Missing data in the request")
+
+        # Don't trigger the hook on issue's update
+        if request_action == 'update':
+            self.send_response(200, "OK")
+            return
+
+        display_action = self.simple_past(request_action)
+
+        msg = ('{user} {display_action} MR !{request_number} '
+               '({from_branch}->{to_branch}: {request_title}) '
+               'on {project_name} {url}'
+               .format(user=user, display_action=display_action,
+                       request_number=request_number, from_branch=from_branch,
+                       to_branch=to_branch, request_title=request_title,
+                       project_name=project_name, url=url))
+
+        self._send_message_to_all('merge_request', project, msg)
+
     @staticmethod
     def simple_past(verb):
         if not verb.endswith('e'):
