@@ -31,7 +31,8 @@ def main(config_file):
         sys.exit(3)
 
     network_info = _get_channels_per_network(config)
-    all_bots = connect_networks(network_info)
+    watchers = config.get('watchers')
+    all_bots = connect_networks(network_info, watchers)
 
     hooks = config['hooks']
     token = config['token']
