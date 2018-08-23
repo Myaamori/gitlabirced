@@ -50,6 +50,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://gitlab.com/palvarez89/gitlabirced',
-    version='0.1.2',
+    version='0.1.3',
     zip_safe=False,
 )
