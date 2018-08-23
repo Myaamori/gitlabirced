@@ -32,7 +32,7 @@ hooks:
 watchers:
 - network: gimp
   channel: '##ironfoot3'
-  project: palvarez89/definitions
+  project: baserock/definitions
   server: http://gitlab.com
 
 token: 12345
