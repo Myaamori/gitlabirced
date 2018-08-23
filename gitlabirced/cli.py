@@ -59,7 +59,7 @@ def main(config_file):
 
 
 def _get_channels_per_network(cfg):
-    hooks = cfg['hooks']
+    hooks = cfg.get('hooks', {})
     network_info = copy.deepcopy(cfg['networks'])
     for net_key in network_info:
         network_info[net_key]['channels'] = []
@@ -77,6 +77,18 @@ def _get_channels_per_network(cfg):
                 print("Appending {channel} ({network})"
                       .format(channel=ch, network=network))
                 network_info[network]['channels'].append(ch)
+
+    watchers = cfg.get('watchers', {})
+    print(watchers)
+    for watcher in watchers:
+        network = watcher['network']
+        channel = watcher['channel']
+        current_channels = network_info[network]['channels']
+        if channel not in current_channels:
+            print("Appending {channel} ({network})"
+                  .format(channel=channel, network=network))
+            network_info[network]['channels'].append(channel)
+
     return network_info
 
 

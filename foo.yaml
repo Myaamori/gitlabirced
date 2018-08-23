@@ -28,4 +28,11 @@ hooks:
     'ironfoot': push, merge_request, issue
   branches: master
 
+
+watchers:
+- network: gimp
+  channel: '##ironfoot3'
+  project: palvarez89/definitions
+  server: http://gitlab.com
+
 token: 12345
