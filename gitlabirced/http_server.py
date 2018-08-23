@@ -61,8 +61,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         return json_params
 
     def do_POST(self):
-        hooks = self.server.hooks
-        print(hooks)
         logging.info("Hook received")
 
         try:
@@ -81,7 +79,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def _handle_push(self, json_params):
-        print('handling push')
+        logging.info('handling push')
 
         try:
             project = json_params['project']['path_with_namespace']
@@ -126,7 +124,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self._send_message_to_all('push', project, msg, branch_name)
 
     def _handle_issue(self, json_params):
-        print('handling issue')
+        logging.info('handling issue')
 
         try:
             user = json_params['user']['username']
@@ -170,6 +168,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         self._send_message_to_all('issue', project, msg)
 
     def _handle_merge_request(self, json_params):
+        logging.info('handling merge_request')
+
         try:
             user = json_params['user']['username']
             request = json_params['object_attributes']
@@ -182,8 +182,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             request_title = request['title'].strip()
             request_action = request['action']
             url = request['url']
-        except KeyError as e:
-            print(e)
+        except KeyError:
             raise RequestException(400, "Missing data in the request")
 
         # Don't trigger the hook on issue's update
@@ -215,7 +214,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         bots = self.server.bots
         for h in hooks:
             if h['project'] == project:
-                print('project found!!')
                 network = h['network']
                 reports = h['reports']
                 branches = h['branches'].split()
@@ -224,9 +222,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                     continue
                 for r in reports:
                     if kind in reports[r]:
-                        print('sending to %s, in network %s' % (r, network))
+                        logging.info('sending to %s, in network %s'
+                                     % (r, network))
                         bot.connection.privmsg(r, msg)
 
-            else:
-                print("not found", project)
         self.send_response(200, "OK")
