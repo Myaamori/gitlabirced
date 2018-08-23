@@ -7,6 +7,8 @@ import click
 import copy
 import yaml
 
+from irc.client import is_channel
+
 from .irc_client import connect_networks
 from .http_server import MyHTTPServer, RequestHandler
 
@@ -73,7 +75,7 @@ def _get_channels_per_network(cfg):
         reports = hook['reports']
         for ch in reports:
             current_channels = network_info[network]['channels']
-            if ch.startswith('#') and ch not in current_channels:
+            if is_channel(ch) and ch not in current_channels:
                 print("Appending {channel} ({network})"
                       .format(channel=ch, network=network))
                 network_info[network]['channels'].append(ch)
