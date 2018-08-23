@@ -24,6 +24,7 @@ hooks:
   network: freenode
   reports:
     '##ironfoot': push, merge_request, issue
+    '##ironfoot2': push, merge_request, issue
     'ironfoot': push, merge_request, issue
   branches: master
 

@@ -6,16 +6,17 @@ import sys
 
 
 class MyIRCClient(irc.client.SimpleIRCClient):
-    def __init__(self, channel, nickname, server, net_name, port=6667):
+    def __init__(self, channels, nickname, server, net_name, port=6667):
         irc.client.SimpleIRCClient.__init__(self)
-        self.channel = channel
+        self.channels = channels
         self.nickname = nickname
         self.server = server
         self.net_name = net_name
         self.port = port
 
     def on_welcome(self, connection, event):
-        connection.join(self.channel)
+        for ch in self.channels:
+            connection.join(ch)
 
     def on_disconnect(self, connection, event):
         sys.exit(0)
@@ -39,11 +40,9 @@ def connect_networks(networks):
         server = networks[net]['url']
         port = networks[net]['port']
         nick = networks[net]['nick']
-        # TODO: get better the channels to connect for a given network
-        channel = '##ironfoot'
+        channels = networks[net]['channels']
 
-        # TODO: Pass all the channels here, to connect later
-        bot = MyIRCClient(channel, nick, server, net, port)
+        bot = MyIRCClient(channels, nick, server, net, port)
         bot.connect(server, port, nick)
         print("Starting %s" % server)
         thread = Process(target=bot.start)

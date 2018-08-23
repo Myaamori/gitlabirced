@@ -4,7 +4,7 @@
 import signal
 import sys
 import click
-
+import copy
 import yaml
 
 from .irc_client import connect_networks
@@ -28,9 +28,10 @@ def main(config_file):
         print("File %s not found" % config_file)
         sys.exit(3)
 
-    all_bots = connect_networks(config['networks'])
+    network_info = _get_channels_per_network(config)
+    all_bots = connect_networks(network_info)
 
-    hooks = parse_hooks(config['hooks'])
+    hooks = config['hooks']
     token = config['token']
 
     def run_server(addr, port):
@@ -57,10 +58,26 @@ def main(config_file):
     return 0
 
 
-def parse_hooks(hooks):
-    print('parsing hooks')
-    print(hooks)
-    return hooks
+def _get_channels_per_network(cfg):
+    hooks = cfg['hooks']
+    network_info = copy.deepcopy(cfg['networks'])
+    for net_key in network_info:
+        network_info[net_key]['channels'] = []
+
+    for hook in hooks:
+        network = hook['network']
+        if network not in network_info:
+            raise Exception("Network '{network}' not configured"
+                            .format(network=network))
+
+        reports = hook['reports']
+        for ch in reports:
+            current_channels = network_info[network]['channels']
+            if ch.startswith('#') and ch not in current_channels:
+                print("Appending {channel} ({network})"
+                      .format(channel=ch, network=network))
+                network_info[network]['channels'].append(ch)
+    return network_info
 
 
 if __name__ == "__main__":
