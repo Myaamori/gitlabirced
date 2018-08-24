@@ -10,10 +10,11 @@ import sys
 
 class MyIRCClient(irc.client.SimpleIRCClient):
     def __init__(self, channels, nickname, server, net_name, port=6667,
-                 watchers=None):
+                 watchers=None, nickpass=None):
         irc.client.SimpleIRCClient.__init__(self)
         self.channels = channels
         self.nickname = nickname
+        self.nickpass = nickpass
         self.server = server
         self.net_name = net_name
         self.port = port
@@ -24,6 +25,10 @@ class MyIRCClient(irc.client.SimpleIRCClient):
         self.key_template = '{kind}{channel}{number}'
 
     def on_welcome(self, connection, event):
+        if self.nickpass:
+            connection.privmsg('NickServ', 'IDENTIFY {password}'.format(
+                password=self.nickpass))
+
         for ch in self.channels:
             connection.join(ch)
 
@@ -131,8 +136,10 @@ def connect_networks(networks, watchers):
         port = networks[net]['port']
         nick = networks[net]['nick']
         channels = networks[net]['channels']
+        password = networks[net].get('pass')
 
-        bot = MyIRCClient(channels, nick, server, net, port, watchers)
+        bot = MyIRCClient(channels, nick, server, net, port=port,
+                          watchers=watchers, nickpass=password)
         bot.connect(server, port, nick)
         print("Starting %s" % server)
         thread = Process(target=bot.start)
