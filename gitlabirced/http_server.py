@@ -3,6 +3,8 @@ from http.server import BaseHTTPRequestHandler
 import json
 import logging
 
+http_server_logger = logging.getLogger(__name__)
+
 
 class MyHTTPServer(HTTPServer):
 
@@ -18,7 +20,7 @@ class RequestException(Exception):
     def __init__(self, code, status):
         self.code = code
         self.status = status
-        logging.error('%s - %s' % (self.code, self.status))
+        http_server_logger.error('%s - %s' % (self.code, self.status))
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -61,7 +63,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         return json_params
 
     def do_POST(self):
-        logging.info("Hook received")
+        http_server_logger.info("Hook received")
 
         try:
             self._check_token()
@@ -70,16 +72,16 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self, '_handle_%s' % json_params.get('object_kind'))
             handler(json_params)
         except RequestException as re:
-            logging.error(re.status)
+            http_server_logger.error(re.status)
             self.send_response(re.code, re.status)
         except Exception:
-            logging.exception("Internal server error")
+            http_server_logger.exception("Internal server error")
             self.send_response(500, "Internal server error")
         finally:
             self.end_headers()
 
     def _handle_push(self, json_params):
-        logging.info('handling push')
+        http_server_logger.info('handling push')
 
         try:
             project = json_params['project']['path_with_namespace']
@@ -124,7 +126,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self._send_message_to_all('push', project, msg, branch_name)
 
     def _handle_issue(self, json_params):
-        logging.info('handling issue')
+        http_server_logger.info('handling issue')
 
         try:
             user = json_params['user']['username']
@@ -168,7 +170,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self._send_message_to_all('issue', project, msg)
 
     def _handle_merge_request(self, json_params):
-        logging.info('handling merge_request')
+        http_server_logger.info('handling merge_request')
 
         try:
             user = json_params['user']['username']
@@ -222,8 +224,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                     continue
                 for r in reports:
                     if kind in reports[r]:
-                        logging.info('sending to %s, in network %s'
-                                     % (r, network))
+                        http_server_logger.info('sending to %s, in network %s'
+                                                % (r, network))
                         bot.connection.privmsg(r, msg)
 
         self.send_response(200, "OK")
