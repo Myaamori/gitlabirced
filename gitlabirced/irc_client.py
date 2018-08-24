@@ -140,7 +140,7 @@ def connect_networks(networks, watchers):
 
         bot = MyIRCClient(channels, nick, server, net, port=port,
                           watchers=watchers, nickpass=password)
-        bot.connect(server, port, nick)
+        bot.connect(server, port, nick, password=password)
         print("Starting %s" % server)
         thread = Process(target=bot.start)
         thread.start()
