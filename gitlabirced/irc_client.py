@@ -19,6 +19,9 @@ class MyIRCClient(irc.client.SimpleIRCClient):
         self.port = port
         self.watchers = watchers
         self.last_mention = {}
+        self.count_per_channel = {}
+        self.spam_threshold = 15
+        self.key_template = '{kind}{channel}{number}'
 
     def on_welcome(self, connection, event):
         for ch in self.channels:
@@ -26,6 +29,10 @@ class MyIRCClient(irc.client.SimpleIRCClient):
 
     def on_disconnect(self, connection, event):
         sys.exit(0)
+
+    def _update_count(self, channel):
+        count = self.count_per_channel.get(channel, 0) + 1
+        self.count_per_channel[channel] = count
 
     def on_pubmsg(self, c, e):
         print('on pubmsg')
@@ -38,8 +45,9 @@ class MyIRCClient(irc.client.SimpleIRCClient):
         for w in self.watchers:
             if not (w['network'] == self.net_name and
                     w['channel'] == on_channel):
-                # TODO count as line written, for repeated msgs safety
                 continue
+
+            self._update_count(on_channel)
 
             msg = e.arguments[0].split()
             mr_regex = r'#([0-9]+)'
@@ -60,10 +68,28 @@ class MyIRCClient(irc.client.SimpleIRCClient):
             # Only one watcher allowed per channel. Stop.
             break
 
+    def _mentioned_recently(self, channel, kind, number):
+        key = self.key_template.format(
+                kind=kind, channel=channel, number=number)
+        last_time = self.last_mention.get(key)
+        if not last_time:
+            return False
+        if (self.count_per_channel[channel]-last_time) <= self.spam_threshold:
+            return True
+        return False
+
+    def _update_mentions(self, channel, kind, number):
+        key = self.key_template.format(
+                kind=kind, channel=channel, number=number)
+        self.last_mention[key] = self.count_per_channel[channel]
+
     def _fetch_and_say(self, c, kind, number, watcher):
         server = watcher.get('server', 'https://gitlab.com')
         target = watcher['channel']
         project_encoded = urllib.parse.quote(watcher['project'], safe='')
+
+        if self._mentioned_recently(target, kind, number):
+            return
 
         if kind == 'issue':
             url_template = 'api/v4/projects/{project}/issues/{number}'
@@ -88,6 +114,7 @@ class MyIRCClient(irc.client.SimpleIRCClient):
         info_text = '{prefix} {title} {url}'.format(
                 prefix=prefix, title=info['title'], url=info['web_url'])
         c.privmsg(target, info_text)
+        self._update_mentions(target, kind, number)
 
 
 def connect_networks(networks, watchers):
