@@ -1,11 +1,14 @@
 import irc.strings
 import irc.client
 
+import logging
 from multiprocessing import Process
 import re
 import requests
 import urllib
 import sys
+
+irc_client_logger = logging.getLogger(__name__)
 
 
 class MyIRCClient(irc.client.SimpleIRCClient):
@@ -23,6 +26,21 @@ class MyIRCClient(irc.client.SimpleIRCClient):
         self.count_per_channel = {}
         self.spam_threshold = 15
         self.key_template = '{kind}{channel}{number}'
+
+    def _log_warning(self, msg):
+        irc_client_logger.warning("(%s) %s" % (self.net_name, msg))
+
+    def _log_info(self, msg):
+        irc_client_logger.info("(%s) %s" % (self.net_name, msg))
+
+    def _log_error(self, msg):
+        irc_client_logger.error("(%s) %s" % (self.net_name, msg))
+
+    def on_privnotice(self, c, e):
+        self._log_info("PRIVNOTICE: %s" % e.arguments[0])
+
+    def on_error(self, c, e):
+        self._log_error("ERROR: %s" % e.arguments[0])
 
     def on_welcome(self, connection, event):
         if self.nickpass:
