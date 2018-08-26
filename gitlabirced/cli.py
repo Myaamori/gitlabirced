@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """Console script for gitlabirced."""
-import signal
-import sys
 import click
 import copy
+import logging
+import signal
+import sys
 import yaml
 
 from irc.client import is_channel
@@ -15,8 +16,14 @@ from .http_server import MyHTTPServer, RequestHandler
 
 @click.command()
 @click.argument('config-file', nargs=1)
-def main(config_file):
+@click.option('-v', '--verbose', count=True)
+def main(config_file, verbose):
     """Console script for gitlabirced."""
+    print(verbose)
+    print(verbose)
+    print(verbose)
+    print(verbose)
+    _configure_logging(verbose)
     click.echo(config_file)
 
     try:
@@ -93,6 +100,40 @@ def _get_channels_per_network(cfg):
             network_info[network]['channels'].append(channel)
 
     return network_info
+
+
+def _configure_logging(verbosity):
+    """ Configures logging level in different ways.
+
+    :param verbosity: The verbosity level (0-4)
+      0: logging.WARNING
+      1: logging.INFO
+      2: logging.DEBUG
+      3: (root) logging.INFO
+      4: (root) logging.DEBUG
+    """
+    our_module_name = __name__.split('.')[0]
+    our_logger = logging.getLogger(our_module_name)
+    root_logger = logging.getLogger()
+
+    our_level = None
+    root_level = None
+
+    if verbosity == 1:
+        our_level = logging.INFO
+    elif verbosity == 2:
+        our_level = logging.DEBUG
+    if verbosity == 3:
+        root_level = logging.INFO
+    if verbosity >= 4:
+        root_level = logging.DEBUG
+
+    if root_level:
+        root_logger.setLevel(root_level)
+    elif our_level:
+        our_logger.setLevel(our_level)
+
+    root_logger.addHandler(logging.StreamHandler())
 
 
 if __name__ == "__main__":

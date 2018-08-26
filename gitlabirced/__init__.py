@@ -5,9 +5,3 @@
 __author__ = """Pedro Alvarez Piedehierro"""
 __email__ = 'pedro@alvarezpiedehierro.com'
 __version__ = '0.1.3'
-
-import logging
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler())
