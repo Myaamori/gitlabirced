@@ -100,16 +100,17 @@ class MyIRCClient(irc.client.SimpleIRCClient):
         key = self.key_template.format(
                 kind=kind, channel=channel, number=number)
         last_time = self.last_mention.get(key)
-        if not last_time:
+        if last_time is None:
             return False
-        if (self.count_per_channel[channel]-last_time) <= self.spam_threshold:
+        if ((self.count_per_channel.get(channel, 0)-last_time) <=
+                self.spam_threshold):
             return True
         return False
 
     def _update_mentions(self, channel, kind, number):
         key = self.key_template.format(
                 kind=kind, channel=channel, number=number)
-        self.last_mention[key] = self.count_per_channel[channel]
+        self.last_mention[key] = self.count_per_channel.get(channel, 0)
 
     def _fetch_and_say(self, c, kind, number, watcher):
         server = watcher.get('server', 'https://gitlab.com')
@@ -130,9 +131,7 @@ class MyIRCClient(irc.client.SimpleIRCClient):
             project=project_encoded, number=number))
         print(url)
 
-        data = requests.get(url)
-        info = data.json()
-        status = data.status_code
+        status, info = self._fetch_gitlab_info(url)
         if status != 200:
             return
 
@@ -143,6 +142,10 @@ class MyIRCClient(irc.client.SimpleIRCClient):
                 prefix=prefix, title=info['title'], url=info['web_url'])
         c.privmsg(target, info_text)
         self._update_mentions(target, kind, number)
+
+    def _fetch_gitlab_info(self, url):
+        data = requests.get(url)
+        return data.status_code, data.json()
 
 
 def connect_networks(networks, watchers):
