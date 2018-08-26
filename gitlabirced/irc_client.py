@@ -70,12 +70,12 @@ class MyIRCClient(irc.client.SimpleIRCClient):
         if not self.watchers:
             return
 
+        self._update_count(on_channel)
+
         for w in self.watchers:
             if not (w['network'] == self.net_name and
                     w['channel'] == on_channel):
                 continue
-
-            self._update_count(on_channel)
 
             msg = e.arguments[0].split()
             mr_regex = r'#([0-9]+)'
