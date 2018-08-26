@@ -40,7 +40,12 @@ class MyIRCClient(irc.client.SimpleIRCClient):
         self._log_info("PRIVNOTICE: %s" % e.arguments[0])
 
     def on_error(self, c, e):
-        self._log_error("ERROR: %s" % e.arguments[0])
+        error = ""
+        if len(e.arguments) > 0:
+            error = e.arguments[0]
+        else:
+            error = str(e)
+        self._log_error("ERROR: %s" % error)
 
     def on_welcome(self, connection, event):
         if self.nickpass:
