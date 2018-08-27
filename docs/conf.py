@@ -70,7 +70,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'api/gitlabirced.rst']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -168,7 +168,7 @@ def run_apidoc(_):
     cur_dir = os.path.normpath(os.path.dirname(__file__))
     output_path = os.path.join(cur_dir, 'api')
     modules = os.path.normpath(os.path.join(cur_dir, "../gitlabirced"))
-    main(['-f', '-M', '-H', 'API Documentation', '-o', cur_dir, modules])
+    main(['-f', '-M', '-T', '-e', '-o', output_path, modules])
 
 # launch setup
 def setup(app):
