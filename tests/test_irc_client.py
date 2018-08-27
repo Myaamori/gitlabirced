@@ -1,21 +1,8 @@
 import unittest
 from irc.client import Event
 
+from fake_helpers import FakeConnection
 from gitlabirced.irc_client import MyIRCClient
-
-
-class FakeConnection():
-    def __init__(self):
-        self.privmsgs = {}
-        self.channels = []
-
-    def privmsg(self, target, msg):
-        msgs = self.privmsgs.get(target, [])
-        msgs.append("(%s) %s" % (target, msg))
-        self.privmsgs[target] = msgs
-
-    def join(self, channel):
-        self.channels.append(channel)
 
 
 class BaseIRCClientTestCase(unittest.TestCase):
