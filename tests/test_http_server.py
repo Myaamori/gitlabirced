@@ -2,9 +2,30 @@ import urllib.parse
 import json
 
 from helpers_http_server import BaseServerTestCase
+from fake_helpers import FakeBot
 
 
 class BaseHTTPServerTestCase(BaseServerTestCase):
+
+    def setUp(self):
+        self.token = 12345
+        self.hooks = [
+            {
+                'project': 'palvarez89/definitions',
+                'network': 'freenode',
+                'branches': 'master',
+                'reports': {
+                    '#ironnet': ['push', 'issue']
+                },
+            }
+        ]
+
+        self.bots = {
+            'freenode': {
+                'bot': FakeBot()
+            }
+        }
+        super(BaseHTTPServerTestCase, self).setUp()
 
     def test_get_disabled(self):
         res = self.request('/', method='GET')
@@ -49,3 +70,14 @@ class BaseHTTPServerTestCase(BaseServerTestCase):
                            headers=headers)
         self.assertEqual(res.status, 400)
         self.assertEqual(res.reason, "object_kind 'foo' not supported")
+
+    def test_post_push(self):
+        with open('tests/data/push.json', 'r') as json_file:
+            json_push = json.load(json_file)
+        headers = {"X-Gitlab-Token": "12345"}
+        params_json = json.dumps(json_push)
+        self.request('', method='POST', body=params_json, headers=headers)
+        exp = ["(#ironnet) jsmith pushed on Diaspora@master: 4 commits "
+               "(last: fixed readme)"]
+        self.assertEqual(
+            self.bots['freenode']['bot'].connection.privmsgs['#ironnet'], exp)

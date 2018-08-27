@@ -32,11 +32,10 @@ class TestServerThread(threading.Thread):
         self.test_object = test_object
 
     def run(self):
-        token = 12345
-        hooks = {}
-        all_bots = {}
         sys.stderr.write('starting thread\n')
-        self.server = MyHTTPServer(token, hooks, all_bots,
+        self.server = MyHTTPServer(self.test_object.token,
+                                   self.test_object.hooks,
+                                   self.test_object.bots,
                                    ('localhost', 0),
                                    RequestHandler)
 

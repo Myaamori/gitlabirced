@@ -10,3 +10,8 @@ class FakeConnection():
 
     def join(self, channel):
         self.channels.append(channel)
+
+
+class FakeBot():
+    def __init__(self):
+        self.connection = FakeConnection()
