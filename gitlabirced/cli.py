@@ -52,6 +52,7 @@ def main(config_file, verbose):
         print('serving')
 
     print('going to execute server')
+    # TODO: move these 2 values to the configuration file
     run_server('0.0.0.0', 1337)
 
     def signal_handler(sig, frame):

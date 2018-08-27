@@ -49,6 +49,7 @@ class MyIRCClient(irc.client.SimpleIRCClient):
 
     def on_welcome(self, connection, event):
         if self.nickpass:
+            # TODO: Only if auth is 'NickServ'
             connection.privmsg('NickServ', 'IDENTIFY {password}'.format(
                 password=self.nickpass))
 
@@ -164,6 +165,7 @@ def connect_networks(networks, watchers):
         channels = networks[net]['channels']
         password = networks[net].get('pass')
 
+        # TODO: Only use password if auth is set to 'sasl'
         bot = MyIRCClient(channels, nick, server, net, port=port,
                           watchers=watchers, nickpass=password)
         bot.connect(server, port, nick, password=password)
