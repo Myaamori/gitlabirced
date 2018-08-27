@@ -35,7 +35,7 @@ class BaseHTTPServerTestCase(BaseServerTestCase):
         params = urllib.parse.urlencode(
             {'@number': 12524, '@type': 'issue', '@action': 'show'}
         )
-        headers = {"X-Gitlab-Token": "12345"}
+        headers = {"X-Gitlab-Token": self.token}
         res = self.request('', method='POST', body=params, headers=headers)
         self.assertEqual(res.status, 400)
         self.assertEqual(res.reason, "JSON data couldn't be parsed")
@@ -55,7 +55,7 @@ class BaseHTTPServerTestCase(BaseServerTestCase):
 
     def test_post_no_object_kind(self):
         params = {'something_else': 'push'}
-        headers = {"X-Gitlab-Token": "12345"}
+        headers = {"X-Gitlab-Token": self.token}
         params_json = json.dumps(params)
         res = self.request('', method='POST', body=params_json,
                            headers=headers)
@@ -64,7 +64,7 @@ class BaseHTTPServerTestCase(BaseServerTestCase):
 
     def test_post_unsupported_object_kind(self):
         params = {'object_kind': 'foo'}
-        headers = {"X-Gitlab-Token": "12345"}
+        headers = {"X-Gitlab-Token": self.token}
         params_json = json.dumps(params)
         res = self.request('', method='POST', body=params_json,
                            headers=headers)
@@ -74,7 +74,7 @@ class BaseHTTPServerTestCase(BaseServerTestCase):
     def test_post_push(self):
         with open('tests/data/push.json', 'r') as json_file:
             json_push = json.load(json_file)
-        headers = {"X-Gitlab-Token": "12345"}
+        headers = {"X-Gitlab-Token": self.token}
         params_json = json.dumps(json_push)
         self.request('', method='POST', body=params_json, headers=headers)
         exp = ["(#ironnet) jsmith pushed on Diaspora@master: 4 commits "
