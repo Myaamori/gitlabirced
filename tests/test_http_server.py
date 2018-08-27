@@ -15,7 +15,9 @@ class BaseHTTPServerTestCase(BaseServerTestCase):
                 'network': 'freenode',
                 'branches': 'master',
                 'reports': {
-                    '#ironnet': ['push', 'issue']
+                    '#ironpush': ['push'],
+                    '#ironissue': ['issue'],
+                    '#ironmerge': ['merge_request']
                 },
             }
         ]
@@ -71,13 +73,34 @@ class BaseHTTPServerTestCase(BaseServerTestCase):
         self.assertEqual(res.status, 400)
         self.assertEqual(res.reason, "object_kind 'foo' not supported")
 
-    def test_post_push(self):
-        with open('tests/data/push.json', 'r') as json_file:
+    def _post_json(self, filename):
+        with open(filename, 'r') as json_file:
             json_push = json.load(json_file)
         headers = {"X-Gitlab-Token": self.token}
         params_json = json.dumps(json_push)
         self.request('', method='POST', body=params_json, headers=headers)
-        exp = ["(#ironnet) jsmith pushed on Diaspora@master: 4 commits "
+
+    def test_post_push(self):
+        self._post_json('tests/data/push.json')
+        exp = ["(#ironpush) jsmith pushed on Diaspora@master: 4 commits "
                "(last: fixed readme)"]
         self.assertEqual(
-            self.bots['freenode']['bot'].connection.privmsgs['#ironnet'], exp)
+            self.bots['freenode']['bot'].connection.privmsgs['#ironpush'], exp)
+
+    def test_post_issue(self):
+        self._post_json('tests/data/issue.json')
+        exp = ["(#ironissue) root opened issue #23 (New API: "
+               "create/update/delete file) on Gitlab Test "
+               "http://example.com/diaspora/issues/23"]
+        self.assertEqual(
+            self.bots['freenode']['bot'].connection.privmsgs['#ironissue'],
+            exp)
+
+    def test_post_merge_request(self):
+        self._post_json('tests/data/merge_request.json')
+        exp = ["(#ironmerge) root opened MR !1 (ms-viewport->master: "
+               "MS-Viewport) on Awesome Project "
+               "http://example.com/diaspora/merge_requests/1"]
+        self.assertEqual(
+            self.bots['freenode']['bot'].connection.privmsgs['#ironmerge'],
+            exp)
