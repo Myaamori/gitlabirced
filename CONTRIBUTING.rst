@@ -77,7 +77,7 @@ Ready to contribute? Here's how to set up `gitlabirced` for local development.
    Now you can make your changes locally.
 
 5. When you're done making changes, check that your changes pass flake8 and the
-   tests. Including all test environments using tox.
+   tests. Run all of these tests individually or all of them using tox::
 
     $ make lint
     $ make tests
