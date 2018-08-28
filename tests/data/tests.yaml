@@ -1,0 +1,32 @@
+networks:
+  local:
+    url: localhost
+    port: 8888
+    nick: gitlabirced
+    sasl: false
+    pass: notapassword
+  local2:
+    url: localhost
+    port: 6666
+    nick: gitlabirced
+    sasl: false
+    pass: notapassword2
+
+
+hooks:
+- project: palvarez89/definitions
+  network: local
+  reports:
+    '#ironfoot': push, merge_request, issue
+    'ironfoot': push, merge_request, issue
+    'peter': push, merge_request, issue
+  branches: master
+
+
+watchers:
+- network: local
+  channel: '#ironfoot3'
+  project: baserock/definitions
+  server: http://127.0.0.1:9999
+
+token: 12345
