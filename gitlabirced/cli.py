@@ -6,6 +6,7 @@ import copy
 import logging
 import signal
 import sys
+import threading
 import yaml
 
 from irc.client import is_channel
@@ -18,55 +19,64 @@ from .http_server import MyHTTPServer, RequestHandler
 @click.argument('config-file', nargs=1)
 @click.option('-v', '--verbose', count=True)
 def main(config_file, verbose):
-    """Console script for gitlabirced."""
-    print(verbose)
-    print(verbose)
-    print(verbose)
-    print(verbose)
-    _configure_logging(verbose)
-    click.echo(config_file)
+    client = Client(config_file, verbose)
+    client.start()
+    signal.signal(signal.SIGINT, client.stop)
 
-    try:
-        with open(config_file, 'r') as stream:
-            config = yaml.load(stream)
-            print("Configuration loaded %s" % config)
-    except yaml.YAMLError as exc:
-        print(exc)
-        sys.exit(1)
-    except IOError:
-        print("File %s not found" % config_file)
-        sys.exit(3)
 
-    network_info = _get_channels_per_network(config)
-    watchers = config.get('watchers')
-    all_bots = connect_networks(network_info, watchers)
-
-    hooks = config['hooks']
-    token = config['token']
-
-    def run_server(addr, port):
-        """Start a HTTPServer which waits for requests."""
-        httpd = MyHTTPServer(token, hooks, all_bots, (addr, port),
-                             RequestHandler)
-        httpd.serve_forever()
-        print('serving')
-
-    print('going to execute server')
-    # TODO: move these 2 values to the configuration file
-    run_server('0.0.0.0', 1337)
-
-    def signal_handler(sig, frame):
+class Client(threading.Thread):
+    def stop(self, sig=None, frame=None):
         print('You pressed Ctrl+C!')
-        for b in all_bots:
-            all_bots[b]['bot'].reactor.disconnect_all()
-            all_bots[b]['process'].terminate()
-        click.Abort()
+        for b in self.all_bots:
+            self.all_bots[b]['bot'].disconnect()
         sys.exit(0)
-    signal.signal(signal.SIGINT, signal_handler)
 
-    print('Press Ctrl+C')
+    def __init__(self, config_file, verbose):
+        threading.Thread.__init__(self)
+        self.config_file = config_file
+        self.verbose = verbose
+        self.all_bots = []
 
-    return 0
+    def run(self):
+        """Console script for gitlabirced."""
+        verbose = self.verbose
+        config_file = self.config_file
+
+        _configure_logging(verbose)
+        click.echo(config_file)
+
+        try:
+            with open(config_file, 'r') as stream:
+                config = yaml.load(stream)
+                print("Configuration loaded %s" % config)
+        except yaml.YAMLError as exc:
+            print(exc)
+            sys.exit(1)
+        except IOError:
+            print("File %s not found" % config_file)
+            sys.exit(3)
+
+        network_info = _get_channels_per_network(config)
+        watchers = config.get('watchers')
+        print('going to connect networks')
+        self.all_bots = connect_networks(network_info, watchers)
+
+        hooks = config['hooks']
+        token = config['token']
+
+        def run_server(addr, port):
+            """Start a HTTPServer which waits for requests."""
+            httpd = MyHTTPServer(token, hooks, self.all_bots, (addr, port),
+                                 RequestHandler)
+            httpd.serve_forever()
+            print('serving')
+
+        print('going to execute server')
+        # TODO: move these 2 values to the configuration file
+        run_server('0.0.0.0', 1337)
+        print('Press Ctrl+C')
+
+        return 0
 
 
 def _get_channels_per_network(cfg):

@@ -1,21 +1,25 @@
 import irc.strings
 import irc.client
+import irc.bot
 
 import logging
-from multiprocessing import Process
+from threading import Thread
 import re
 import requests
 import urllib
-import sys
 
 irc_client_logger = logging.getLogger(__name__)
 
 
-class MyIRCClient(irc.client.SimpleIRCClient):
+class MyIRCClient(irc.bot.SingleServerIRCBot):
     def __init__(self, channels, nickname, server, net_name, port=6667,
                  watchers=None, nickpass=None):
-        irc.client.SimpleIRCClient.__init__(self)
-        self.channels = channels
+
+        spec = irc.bot.ServerSpec(server, port, nickpass)
+        irc.bot.SingleServerIRCBot.__init__(
+            self, [spec], nickname, nickname)
+
+        self.channels_to_join = channels
         self.nickname = nickname
         self.nickpass = nickpass
         self.server = server
@@ -26,6 +30,7 @@ class MyIRCClient(irc.client.SimpleIRCClient):
         self.count_per_channel = {}
         self.spam_threshold = 15
         self.key_template = '{kind}{channel}{number}'
+        self.ping_configured = False
 
     def _log_warning(self, msg):
         irc_client_logger.warning("(%s) %s" % (self.net_name, msg))
@@ -48,16 +53,20 @@ class MyIRCClient(irc.client.SimpleIRCClient):
         self._log_error("ERROR: %s" % error)
 
     def on_welcome(self, connection, event):
+        if not self.ping_configured:
+            connection.set_keepalive(10)
+            self.ping_configured = True
+
         if self.nickpass:
             # TODO: Only if auth is 'NickServ'
             connection.privmsg('NickServ', 'IDENTIFY {password}'.format(
                 password=self.nickpass))
 
-        for ch in self.channels:
+        for ch in self.channels_to_join:
             connection.join(ch)
 
     def on_disconnect(self, connection, event):
-        sys.exit(0)
+        connection.reconnect()
 
     def _update_count(self, channel):
         count = self.count_per_channel.get(channel, 0) + 1
@@ -168,9 +177,8 @@ def connect_networks(networks, watchers):
         # TODO: Only use password if auth is set to 'sasl'
         bot = MyIRCClient(channels, nick, server, net, port=port,
                           watchers=watchers, nickpass=password)
-        bot.connect(server, port, nick, password=password)
         print("Starting %s" % server)
-        thread = Process(target=bot.start)
+        thread = Thread(target=bot.start)
         thread.start()
 
         result[net] = {

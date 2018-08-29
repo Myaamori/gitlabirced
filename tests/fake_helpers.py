@@ -11,6 +11,9 @@ class FakeConnection():
     def join(self, channel):
         self.channels.append(channel)
 
+    def set_keepalive(self, interval):
+        pass
+
 
 class FakeBot():
     def __init__(self):
