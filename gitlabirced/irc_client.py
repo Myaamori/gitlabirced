@@ -3,7 +3,8 @@ import irc.client
 import irc.bot
 
 import logging
-from threading import Thread
+import threading
+import time
 import re
 import requests
 import urllib
@@ -19,6 +20,15 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
         irc.bot.SingleServerIRCBot.__init__(
             self, [spec], nickname, nickname)
 
+        def process_forever(timeout=0.2):
+            # Custom process_forever that we can stop
+            while True:
+                if self._stop_process_forever:
+                    return
+                self.reactor.process_once(timeout)
+        self.reactor.process_forever = process_forever
+
+        self._stop_process_forever = False
         self.channels_to_join = channels
         self.nickname = nickname
         self.nickpass = nickpass
@@ -31,6 +41,9 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
         self.spam_threshold = 15
         self.key_template = '{kind}{channel}{number}'
         self.ping_configured = False
+
+    def shutdown(self):
+        self._stop_process_forever = True
 
     def _log_warning(self, msg):
         irc_client_logger.warning("(%s) %s" % (self.net_name, msg))
@@ -66,6 +79,8 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
             connection.join(ch)
 
     def on_disconnect(self, connection, event):
+        # Wait a bit to avoid throttling
+        time.sleep(10)
         connection.reconnect()
 
     def _update_count(self, channel):
@@ -178,7 +193,7 @@ def connect_networks(networks, watchers):
         bot = MyIRCClient(channels, nick, server, net, port=port,
                           watchers=watchers, nickpass=password)
         print("Starting %s" % server)
-        thread = Thread(target=bot.start)
+        thread = threading.Thread(target=bot.start)
         thread.start()
 
         result[net] = {

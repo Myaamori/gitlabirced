@@ -24,20 +24,19 @@ def main(config_file, verbose):
     signal.signal(signal.SIGINT, client.stop)
 
 
-class Client(threading.Thread):
-    def stop(self, sig=None, frame=None):
-        print('You pressed Ctrl+C!')
-        for b in self.all_bots:
-            self.all_bots[b]['bot'].disconnect()
-        sys.exit(0)
-
+class Client():
     def __init__(self, config_file, verbose):
-        threading.Thread.__init__(self)
         self.config_file = config_file
         self.verbose = verbose
         self.all_bots = []
 
-    def run(self):
+    def stop(self, sig=None, frame=None):
+        print('You pressed Ctrl+C!')
+        for b in self.all_bots:
+            self.all_bots[b]['bot'].shutdown()
+        self.httpd.shutdown()
+
+    def start(self):
         """Console script for gitlabirced."""
         verbose = self.verbose
         config_file = self.config_file
@@ -66,10 +65,10 @@ class Client(threading.Thread):
 
         def run_server(addr, port):
             """Start a HTTPServer which waits for requests."""
-            httpd = MyHTTPServer(token, hooks, self.all_bots, (addr, port),
-                                 RequestHandler)
-            httpd.serve_forever()
-            print('serving')
+            self.httpd = MyHTTPServer(token, hooks, self.all_bots,
+                                      (addr, port), RequestHandler)
+            thread = threading.Thread(target=self.httpd.serve_forever)
+            thread.start()
 
         print('going to execute server')
         # TODO: move these 2 values to the configuration file
