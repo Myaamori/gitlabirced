@@ -51,6 +51,9 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
     def _log_info(self, msg):
         irc_client_logger.info("(%s) %s" % (self.net_name, msg))
 
+    def _log_debug(self, msg):
+        irc_client_logger.debug("(%s) %s" % (self.net_name, msg))
+
     def _log_error(self, msg):
         irc_client_logger.error("(%s) %s" % (self.net_name, msg))
 
@@ -79,8 +82,10 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
             connection.join(ch)
 
     def on_disconnect(self, connection, event):
+        timeout = 10
+        self._log_info("DISCONNECT reconnecting in %s seconds" % timeout)
         # Wait a bit to avoid throttling
-        time.sleep(10)
+        time.sleep(timeout)
         connection.reconnect()
 
     def _update_count(self, channel):
@@ -88,9 +93,9 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
         self.count_per_channel[channel] = count
 
     def on_pubmsg(self, c, e):
-        print('on pubmsg')
         on_channel = e.target
-        print('received via', self.net_name, 'channel', on_channel)
+        self._log_info("PUBMSG on channel %s: %s" % (
+            on_channel, e.arguments[0]))
 
         if not self.watchers:
             return
@@ -108,14 +113,12 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
             for m in msg:
                 issue_match = re.match(mr_regex, m)
                 if issue_match:
-                    print('MR')
-                    print(m)
+                    self._log_info("PUBMSG contains MR mention (%s)" % m)
                     self._fetch_and_say(c, 'mr', issue_match.group(1), w)
 
                 mr_match = re.match(issue_regex, m)
                 if mr_match:
-                    print('ISSUE')
-                    print(m)
+                    self._log_info("PUBMSG contains ISSUE mention (%s)" % m)
                     self._fetch_and_say(c, 'issue', mr_match.group(1), w)
 
             # Only one watcher allowed per channel. Stop.
@@ -143,6 +146,7 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
         project_encoded = urllib.parse.quote(watcher['project'], safe='')
 
         if self._mentioned_recently(target, kind, number):
+            self._log_debug("_fetch_and_say decides not to react")
             return
 
         if kind == 'issue':
@@ -154,17 +158,21 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
 
         url = urllib.parse.urljoin(server, url_template.format(
             project=project_encoded, number=number))
-        print(url)
+
+        self._log_debug("_fetch_and_say will query %s" % url)
 
         status, info = self._fetch_gitlab_info(url)
         if status != 200:
+            self._log_error("Failed to query %s" % url)
             return
 
-        print('Title', info['title'])
-        print('URL', info['web_url'])
+        self._log_info("Ttile %s" % info['title'])
+        self._log_info("URL   %s" % info['web_url'])
         prefix = prefix_template.format(number=number)
         info_text = '{prefix} {title} {url}'.format(
                 prefix=prefix, title=info['title'], url=info['web_url'])
+        self._log_debug("_fetch_and_say sending to %s - %s" % (
+            target, info_text))
         c.privmsg(target, info_text)
         self._update_mentions(target, kind, number)
 
@@ -192,7 +200,7 @@ def connect_networks(networks, watchers):
         # TODO: Only use password if auth is set to 'sasl'
         bot = MyIRCClient(channels, nick, server, net, port=port,
                           watchers=watchers, nickpass=password)
-        print("Starting %s" % server)
+        irc_client_logger.info('Starting client for server %s' % server)
         thread = threading.Thread(target=bot.start)
         thread.start()
 
