@@ -3,6 +3,7 @@ import http.server
 import irc.server
 import logging
 import threading
+import time
 import urllib
 
 from gitlabirced.cli import Client
@@ -99,6 +100,8 @@ def run_bot(context, config_file):
     logger.info('FIXTURE run_bot starting')
     bot = Client(config_file, 4)
     bot.start()
+    # Wait a bit for bot to connect to IRC servers
+    time.sleep(0.1)
     yield bot
     logger.info('FIXTURE run_bot stopping')
     bot.stop()
