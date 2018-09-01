@@ -44,6 +44,7 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
 
     def shutdown(self):
         self._stop_process_forever = True
+        self.reactor.disconnect_all()
 
     def _log_warning(self, msg):
         irc_client_logger.warning("(%s) %s" % (self.net_name, msg))
@@ -82,11 +83,12 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
             connection.join(ch)
 
     def on_disconnect(self, connection, event):
-        timeout = 10
-        self._log_info("DISCONNECT reconnecting in %s seconds" % timeout)
-        # Wait a bit to avoid throttling
-        time.sleep(timeout)
-        connection.reconnect()
+        if not self._stop_process_forever:
+            timeout = 10
+            self._log_info("DISCONNECT reconnecting in %s seconds" % timeout)
+            # Wait a bit to avoid throttling
+            time.sleep(timeout)
+            connection.reconnect()
 
     def _update_count(self, channel):
         count = self.count_per_channel.get(channel, 0) + 1
