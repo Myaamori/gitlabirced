@@ -37,17 +37,21 @@ def step_client_comments(context, message, channel):
     c.send_message('#ironfoot3', "!12")
 
 
-@when('we give some time to the bot')
-def step_sleep(context):
-    # Small wait for the bot response
-    time.sleep(0.5)
-
-
 @then('channel "{channel}" contains "{number}" messages')
 def step_check_channel_number_messages(context, channel, number):
     n = int(number)
-    actual = len(context.server_a.messages[channel])
-    assert n == actual
+    tries = 20
+    timeout = 0.05
+    for i in range(tries):
+        actual = len(context.server_a.messages[channel])
+        if n != actual:
+            time.sleep(timeout)
+        else:
+            break
+
+    # Read again, just in case
+    final = len(context.server_a.messages[channel])
+    assert n == final
 
 
 @then('channel "{channel}" last message is about issue "{issuenumber}"')
