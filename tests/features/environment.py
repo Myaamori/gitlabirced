@@ -16,3 +16,5 @@ def before_all(context):
 def before_scenario(context, scenario):
     context.irc_freenode.clean_messages()
     context.irc_gimpnet.clean_messages()
+    context.conf.pop('watchers', None)
+    context.conf.pop('hooks', None)
