@@ -102,9 +102,7 @@ def step_check_last_message(context, network, channel, message):
 def step_check_last_message_issue(context, network, channel, issuenumber,
                                   project):
     project_safe = urllib.parse.quote(project, safe='')
-    logger.info(project_safe)
     project_title = project_safe.title()
-    logger.info(project_title)
 
     expected = ('Issue !{n}: Api V4 Projects {project_title} Issues '
                 '{n} http://fakegitlab.com/api/v4/projects/{project_safe}'
@@ -120,9 +118,7 @@ def step_check_last_message_issue(context, network, channel, issuenumber,
 def step_check_last_message_mr(context, network, channel, mrnumber, project):
 
     project_safe = urllib.parse.quote(project, safe='')
-    logger.info(project_safe)
     project_title = project_safe.title()
-    logger.info(project_title)
 
     expected = ('MR #{n}: Api V4 Projects {project_title} Merge_Requests '
                 '{n} http://fakegitlab.com/api/v4/projects/{project_safe}'
