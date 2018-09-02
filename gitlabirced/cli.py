@@ -19,14 +19,30 @@ from .http_server import MyHTTPServer, RequestHandler
 @click.argument('config-file', nargs=1)
 @click.option('-v', '--verbose', count=True)
 def main(config_file, verbose):
-    client = Client(config_file, verbose)
+    config = load_config(config_file)
+    print(config)
+    client = Client(config, verbose)
     client.start()
     signal.signal(signal.SIGINT, client.stop)
 
 
+def load_config(config_file):
+    try:
+        with open(config_file, 'r') as stream:
+            config = yaml.load(stream)
+            print("Configuration loaded %s" % config)
+    except yaml.YAMLError as exc:
+        print(exc)
+        sys.exit(1)
+    except IOError:
+        print("File %s not found" % config_file)
+        sys.exit(3)
+    return config
+
+
 class Client():
-    def __init__(self, config_file, verbose):
-        self.config_file = config_file
+    def __init__(self, config, verbose):
+        self.config = config
         self.verbose = verbose
         self.all_bots = []
 
@@ -39,29 +55,16 @@ class Client():
     def start(self):
         """Console script for gitlabirced."""
         verbose = self.verbose
-        config_file = self.config_file
 
         _configure_logging(verbose)
-        click.echo(config_file)
 
-        try:
-            with open(config_file, 'r') as stream:
-                config = yaml.load(stream)
-                print("Configuration loaded %s" % config)
-        except yaml.YAMLError as exc:
-            print(exc)
-            sys.exit(1)
-        except IOError:
-            print("File %s not found" % config_file)
-            sys.exit(3)
-
-        network_info = _get_channels_per_network(config)
-        watchers = config.get('watchers')
+        network_info = _get_channels_per_network(self.config)
+        watchers = self.config.get('watchers')
         print('going to connect networks')
         self.all_bots = connect_networks(network_info, watchers)
 
-        hooks = config['hooks']
-        token = config['token']
+        hooks = self.config.get('hooks', {})
+        token = self.config['token']
 
         def run_server(addr, port):
             """Start a HTTPServer which waits for requests."""

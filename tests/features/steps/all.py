@@ -29,14 +29,27 @@ class IRCMessageSender(irc.client.SimpleIRCClient):
         self.connection.quit("Using irc.client.py")
 
 
-@given('gitlabirced running using "{conf}"')
-def step_run_bot(context, conf):
-    context.bot = use_fixture(run_bot, context, conf)
+@given('a gitlabirced watcher')
+def step_load_watcher(context):
+    watcher = {}
+    for row in context.table:
+        watcher[row['key']] = row['value']
+    watchers = context.conf.get('watchers', [])
+    watchers.append(watcher)
+    context.conf['watchers'] = watchers
 
 
-@when('client comments "{message}" on channel "{channel}"')
-def step_client_comments(context, message, channel, times=1):
+@given('gitlabirced running')
+def step_run_bot(context):
+    watchers = context.conf.get('watchers', [])
+    for watcher in watchers:
+        watcher['server'] = "http://127.0.0.1:%s" % context.api.port
+    context.bot = use_fixture(run_bot, context, context.conf)
 
+
+@when('client comments "{message}" on "{network}" channel "{channel}"')
+def step_client_comments(context, message, network, channel, times=1):
+    irc_server = getattr(context, "irc_" + network)
     # Use a random nick every time, otherwise we will have
     # problems with race conditions, given that the client
     # won't disconnect before the new connection.
@@ -44,54 +57,59 @@ def step_client_comments(context, message, channel, times=1):
         string.ascii_uppercase + string.digits, k=5))
     nick = "peter_%s" % nick
     c = IRCMessageSender(channel, message)
-    c.connect(context.server_a.host, context.server_a.port, nick)
+    c.connect(irc_server.host, irc_server.port, nick)
     c.send_message(times)
 
 
-@when('client comments "{message}" on channel "{channel}" "{times}" times')
-def step_client_comments_multiple(context, message, channel, times):
-    step_client_comments(context, message, channel, int(times))
+@when('client comments "{message}" on "{network}" channel "{channel}" '
+      '"{times}" times')
+def step_client_comments_multiple(context, message, network, channel, times):
+    step_client_comments(context, message, network, channel, int(times))
 
 
-@then('channel "{channel}" contains "{number}" messages')
-def step_check_channel_number_messages(context, channel, number):
+@then('network "{network}" channel "{channel}" contains "{number}" messages')
+def step_check_channel_number_messages(context, network, channel, number):
+    irc_server = getattr(context, "irc_" + network)
     n = int(number)
     tries = 100
     timeout = 0.05
     for i in range(tries):
-        actual = len(context.server_a.messages.get(channel, []))
+        actual = len(irc_server.messages.get(channel, []))
         if n != actual:
             time.sleep(timeout)
         else:
             break
 
     # Read again, just in case
-    final = len(context.server_a.messages[channel])
-    logger.info(context.server_a.messages[channel])
+    final = len(irc_server.messages[channel])
+    logger.info(irc_server.messages[channel])
     assert n == final
 
 
-@then('channel "{channel}" last message is "{message}"')
-def step_check_last_message(context, channel, message):
-    last = context.server_a.messages[channel][-1]
+@then('network "{network}" channel "{channel}" last message is "{message}"')
+def step_check_last_message(context, network, channel, message):
+    irc_server = getattr(context, "irc_" + network)
+    last = irc_server.messages[channel][-1]
     message = ":%s" % message
     logger.info(last)
     assert last == message
 
 
-@then('channel "{channel}" last message is about issue "{issuenumber}"')
-def step_check_last_message_issue(context, channel, issuenumber):
+@then('network "{network}" channel "{channel}" last message is about '
+      'issue "{issuenumber}"')
+def step_check_last_message_issue(context, network, channel, issuenumber):
     expected = ('Issue !{n}: Api V4 Projects Baserock%252Fdefinitions Issues '
                 '{n} http://fakegitlab.com/api/v4/projects/baserock%252F'
                 'definitions/issues/{n}')
     expected = expected.format(n=issuenumber)
-    step_check_last_message(context, channel, expected)
+    step_check_last_message(context, network, channel, expected)
 
 
-@then('channel "{channel}" last message is about merge request "{mrnumber}"')
-def step_check_last_message_mr(context, channel, mrnumber):
+@then('network "{network}" channel "{channel}" last message is '
+      'about merge request "{mrnumber}"')
+def step_check_last_message_mr(context, network, channel, mrnumber):
     expected = ('MR #{n}: Api V4 Projects Baserock%252Fdefinitions '
                 'Merge_Requests {n} http://fakegitlab.com/api/v4/projects/'
                 'baserock%252Fdefinitions/merge_requests/{n}')
     expected = expected.format(n=mrnumber)
-    step_check_last_message(context, channel, expected)
+    step_check_last_message(context, network, channel, expected)
