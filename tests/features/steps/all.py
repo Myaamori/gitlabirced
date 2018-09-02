@@ -4,6 +4,7 @@ import logging
 import random
 import string
 import time
+import urllib
 
 from behave_gitlabirced.fixtures import run_bot
 
@@ -91,25 +92,42 @@ def step_check_last_message(context, network, channel, message):
     irc_server = getattr(context, "irc_" + network)
     last = irc_server.messages[channel][-1]
     message = ":%s" % message
+    logger.info(message)
     logger.info(last)
     assert last == message
 
 
 @then('network "{network}" channel "{channel}" last message is about '
-      'issue "{issuenumber}"')
-def step_check_last_message_issue(context, network, channel, issuenumber):
-    expected = ('Issue !{n}: Api V4 Projects Baserock%252Fdefinitions Issues '
-                '{n} http://fakegitlab.com/api/v4/projects/baserock%252F'
-                'definitions/issues/{n}')
-    expected = expected.format(n=issuenumber)
+      'issue "{issuenumber}" project "{project}"')
+def step_check_last_message_issue(context, network, channel, issuenumber,
+                                  project):
+    project_safe = urllib.parse.quote(project, safe='')
+    logger.info(project_safe)
+    project_title = project_safe.title()
+    logger.info(project_title)
+
+    expected = ('Issue !{n}: Api V4 Projects {project_title} Issues '
+                '{n} http://fakegitlab.com/api/v4/projects/{project_safe}'
+                '/issues/{n}')
+    expected = expected.format(n=issuenumber,
+                               project_title=project_title,
+                               project_safe=project_safe)
     step_check_last_message(context, network, channel, expected)
 
 
 @then('network "{network}" channel "{channel}" last message is '
-      'about merge request "{mrnumber}"')
-def step_check_last_message_mr(context, network, channel, mrnumber):
-    expected = ('MR #{n}: Api V4 Projects Baserock%252Fdefinitions '
-                'Merge_Requests {n} http://fakegitlab.com/api/v4/projects/'
-                'baserock%252Fdefinitions/merge_requests/{n}')
-    expected = expected.format(n=mrnumber)
+      'about merge request "{mrnumber}" project "{project}"')
+def step_check_last_message_mr(context, network, channel, mrnumber, project):
+
+    project_safe = urllib.parse.quote(project, safe='')
+    logger.info(project_safe)
+    project_title = project_safe.title()
+    logger.info(project_title)
+
+    expected = ('MR #{n}: Api V4 Projects {project_title} Merge_Requests '
+                '{n} http://fakegitlab.com/api/v4/projects/{project_safe}'
+                '/merge_requests/{n}')
+    expected = expected.format(n=mrnumber,
+                               project_title=project_title,
+                               project_safe=project_safe)
     step_check_last_message(context, network, channel, expected)

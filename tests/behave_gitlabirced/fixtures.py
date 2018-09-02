@@ -4,7 +4,6 @@ import irc.server
 import logging
 import threading
 import time
-import urllib
 
 from gitlabirced.cli import Client
 
@@ -56,7 +55,7 @@ class GitlabRequestHandler(http.server.BaseHTTPRequestHandler):
         logger.info('GITLAB received GET "%s"' % self.path)
         # Subset of real answer, for more information see following example:
         # https://gitlab.com/api/v4/projects/baserock%2Fdefinitions/issues/12
-        safe_path = urllib.parse.quote(self.path, safe='/')
+        safe_path = self.path
         fake_title = safe_path[1:].replace('/', ' ').title()
         fake_url = "http://fakegitlab.com{path}".format(path=safe_path)
         response_tmpl = '{"title":"%s", "web_url":"%s"}'
