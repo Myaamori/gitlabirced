@@ -218,7 +218,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             if h['project'] == project:
                 network = h['network']
                 reports = h['reports']
-                branches = h['branches'].split()
+                branches = h.get('branches', '').split()
                 bot = bots[network]['bot']
                 if branch and branch not in branches:
                     continue
