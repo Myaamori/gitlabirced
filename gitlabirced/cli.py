@@ -14,6 +14,8 @@ from irc.client import is_channel
 from .irc_client import connect_networks
 from .http_server import MyHTTPServer, RequestHandler
 
+cli_logger = logging.getLogger(__name__)
+
 
 @click.command()
 @click.argument('config-file', nargs=1)
@@ -72,10 +74,18 @@ class Client():
                                       (addr, port), RequestHandler)
             thread = threading.Thread(target=self.httpd.serve_forever)
             thread.start()
+            _, self.port_used = self.httpd.socket.getsockname()
 
         print('going to execute server')
         # TODO: move these 2 values to the configuration file
-        run_server('0.0.0.0', 1337)
+        port = self.config.get('port', 0)
+        if port == 0:
+            cli_logger.warning('WARNING: Port not specified in the '
+                               'configuration. A random one will be used')
+        run_server('0.0.0.0', port)
+        if port == 0:
+            cli_logger.warning('WARNING: Port used {port}'
+                               .format(port=self.port_used))
         print('Press Ctrl+C')
 
         return 0

@@ -101,6 +101,7 @@ def run_bot(context, config_file):
     bot.start()
     # Wait a bit for bot to connect to IRC servers
     time.sleep(0.1)
+    context.bot_port = bot.port_used
     yield bot
     logger.info('FIXTURE run_bot stopping')
     bot.stop()

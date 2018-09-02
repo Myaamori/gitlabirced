@@ -36,3 +36,4 @@ watchers:
   server: http://gitlab.com
 
 token: 12345
+port: 1337

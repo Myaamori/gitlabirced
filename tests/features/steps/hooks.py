@@ -33,7 +33,7 @@ def step_send_push_hook(context, project, branch):
     data['project']['name'] = project.replace('/', ' ').title()
     data['ref'] = 'refs/heads/%s' % branch
 
-    _send_request(data)
+    _send_request(context, data)
 
 
 @when('an issue hook about project "{project}" is received')
@@ -43,7 +43,7 @@ def step_send_issue_hook(context, project):
     data['project']['path_with_namespace'] = project
     data['project']['name'] = project.replace('/', ' ').title()
 
-    _send_request(data)
+    _send_request(context, data)
 
 
 @when('a merge request hook about project "{project}" is received')
@@ -54,7 +54,7 @@ def step_send_merge_request_hook(context, project):
     data['object_attributes']['target']['name'] = (
         project.replace('/', ' ').title())
 
-    _send_request(data)
+    _send_request(context, data)
 
 
 @then('network "{network}" channel "{channel}" last long message is')
@@ -67,6 +67,7 @@ def step_check_last_long_message(context, network, channel):
     assert last == message
 
 
-def _send_request(data):
+def _send_request(context, data):
     headers = {'X-Gitlab-Token': '12345'}
-    requests.post('http://127.0.0.1:1337', json=data, headers=headers)
+    address = 'http://127.0.0.1:%s' % context.bot_port
+    requests.post(address, json=data, headers=headers)
