@@ -75,12 +75,23 @@ def step_check_channel_number_messages(context, channel, number):
 def step_check_last_message(context, channel, message):
     last = context.server_a.messages[channel][-1]
     message = ":%s" % message
+    logger.info(last)
     assert last == message
 
 
 @then('channel "{channel}" last message is about issue "{issuenumber}"')
 def step_check_last_message_issue(context, channel, issuenumber):
-    expected = ('Issue !12: Api V4 Projects Baserock%252Fdefinitions Issues '
-                '12 http://fakegitlab.com/api/v4/projects/baserock%252F'
-                'definitions/issues/12')
+    expected = ('Issue !{n}: Api V4 Projects Baserock%252Fdefinitions Issues '
+                '{n} http://fakegitlab.com/api/v4/projects/baserock%252F'
+                'definitions/issues/{n}')
+    expected = expected.format(n=issuenumber)
+    step_check_last_message(context, channel, expected)
+
+
+@then('channel "{channel}" last message is about merge request "{mrnumber}"')
+def step_check_last_message_mr(context, channel, mrnumber):
+    expected = ('MR #{n}: Api V4 Projects Baserock%252Fdefinitions '
+                'Merge_Requests {n} http://fakegitlab.com/api/v4/projects/'
+                'baserock%252Fdefinitions/merge_requests/{n}')
+    expected = expected.format(n=mrnumber)
     step_check_last_message(context, channel, expected)
