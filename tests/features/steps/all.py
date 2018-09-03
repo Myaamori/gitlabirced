@@ -82,8 +82,27 @@ def step_check_channel_number_messages(context, network, channel, number):
             break
 
     # Read again, just in case
-    final = len(irc_server.messages[channel])
-    logger.info(irc_server.messages[channel])
+    final = len(irc_server.messages.get(channel, []))
+    logger.info(irc_server.messages.get(channel, []))
+    assert n == final
+
+
+@then('network "{network}" log contains "{number}" messages')
+def step_check_log_number_messages(context, network, number):
+    irc_server = getattr(context, "irc_" + network)
+    n = int(number)
+    tries = 100
+    timeout = 0.05
+    for i in range(tries):
+        actual = len(irc_server.log)
+        if n != actual:
+            time.sleep(timeout)
+        else:
+            break
+
+    # Read again, just in case
+    final = len(irc_server.log)
+    logger.info(irc_server.log)
     assert n == final
 
 
@@ -92,6 +111,16 @@ def step_check_last_message(context, network, channel, message):
     irc_server = getattr(context, "irc_" + network)
     last = irc_server.messages[channel][-1]
     message = ":%s" % message
+    logger.info(message)
+    logger.info(last)
+    assert last == message
+
+
+@then('network "{network}" last long log message is')
+def step_check_last_long_log_message(context, network):
+    irc_server = getattr(context, "irc_" + network)
+    last = irc_server.log[-1]
+    message = context.text
     logger.info(message)
     logger.info(last)
     assert last == message

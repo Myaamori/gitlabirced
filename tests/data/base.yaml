@@ -1,14 +1,16 @@
 networks:
   freenode:
     url: localhost
+    port: willbereplaced
     nick: gitlabirced
-    sasl: false
-    pass: notapassword
+    auth: NickServ
+    pass: freenodepass
   gimpnet:
     url: localhost
+    port: willbereplaced
     nick: gitlabirced
-    sasl: false
-    pass: notapassword2
+    auth: sasl
+    pass: gimpnetpass
 
 token: 12345
 
