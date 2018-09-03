@@ -29,13 +29,13 @@ An example configuration file ::
         url: irc.gnome.org
         port: 6667
         nick: gitlabirced
-        sasl: false
+        auth: NickServ
         pass: notapassword
       freenode:
         url: irc.freenode.org
         port: 6667
         nick: gitlabirced
-        sasl: false
+        auth: sasl
         pass: notapassword
 
     hooks:
@@ -59,4 +59,5 @@ An example configuration file ::
       project: baserock/definitions
       server: http://gitlab.com
 
+    port: 1337
     token: 12345
