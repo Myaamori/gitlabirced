@@ -36,23 +36,25 @@ def step_send_push_hook(context, project, branch):
     _send_request(context, data)
 
 
-@when('an issue hook about project "{project}" is received')
-def step_send_issue_hook(context, project):
+@when('an issue "{action}" hook about project "{project}" is received')
+def step_send_issue_hook(context, action, project):
     with open('data/issue.json') as json_file:
         data = json.load(json_file)
     data['project']['path_with_namespace'] = project
     data['project']['name'] = project.replace('/', ' ').title()
+    data['object_attributes']['action'] = action
 
     _send_request(context, data)
 
 
-@when('a merge request hook about project "{project}" is received')
-def step_send_merge_request_hook(context, project):
+@when('a merge request "{action}" hook about project "{project}" is received')
+def step_send_merge_request_hook(context, action, project):
     with open('data/merge_request.json') as json_file:
         data = json.load(json_file)
     data['object_attributes']['target']['path_with_namespace'] = project
     data['object_attributes']['target']['name'] = (
         project.replace('/', ' ').title())
+    data['object_attributes']['action'] = action
 
     _send_request(context, data)
 
