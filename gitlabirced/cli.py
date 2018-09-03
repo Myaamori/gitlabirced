@@ -77,7 +77,6 @@ class Client():
             _, self.port_used = self.httpd.socket.getsockname()
 
         print('going to execute server')
-        # TODO: move these 2 values to the configuration file
         port = self.config.get('port', 0)
         if port == 0:
             cli_logger.warning('WARNING: Port not specified in the '
