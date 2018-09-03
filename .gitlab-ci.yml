@@ -9,8 +9,7 @@ tests:
   coverage: '/TOTAL +\d+ +\d+ +(\d+)%/'
   script:
   - pip3 install tox
-  - make test
-  - make lint
+  - tox
 
 docs:
   stage: test
