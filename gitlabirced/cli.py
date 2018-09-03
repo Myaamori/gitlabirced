@@ -19,11 +19,14 @@ cli_logger = logging.getLogger(__name__)
 
 @click.command()
 @click.argument('config-file', nargs=1)
-@click.option('-v', '--verbose', count=True)
-def main(config_file, verbose):
+@click.option('-v', '--verbose', count=True,
+              help="Verbose mode (-vvv for more, -vvvv max)")
+@click.option('-l', '--log', help="Log output to this file")
+def main(config_file, verbose, log):
+    _configure_logging(verbose, log)
     config = load_config(config_file)
     print(config)
-    client = Client(config, verbose)
+    client = Client(config)
     client.start()
     signal.signal(signal.SIGINT, client.stop)
 
@@ -43,9 +46,8 @@ def load_config(config_file):
 
 
 class Client():
-    def __init__(self, config, verbose):
+    def __init__(self, config):
         self.config = config
-        self.verbose = verbose
         self.all_bots = []
 
     def stop(self, sig=None, frame=None):
@@ -56,9 +58,6 @@ class Client():
 
     def start(self):
         """Console script for gitlabirced."""
-        verbose = self.verbose
-
-        _configure_logging(verbose)
 
         network_info = _get_channels_per_network(self.config)
         watchers = self.config.get('watchers')
@@ -124,7 +123,7 @@ def _get_channels_per_network(cfg):
     return network_info
 
 
-def _configure_logging(verbosity):
+def _configure_logging(verbosity, output_file=None):
     """ Configures logging level in different ways.
 
     :param verbosity: The verbosity level (0-4)
@@ -133,6 +132,7 @@ def _configure_logging(verbosity):
       2: logging.DEBUG
       3: (root) logging.INFO
       4: (root) logging.DEBUG
+    :param output_file: If set, file to put the logs.
     """
     our_module_name = __name__.split('.')[0]
     our_logger = logging.getLogger(our_module_name)
@@ -155,7 +155,10 @@ def _configure_logging(verbosity):
     elif our_level:
         our_logger.setLevel(our_level)
 
-    root_logger.addHandler(logging.StreamHandler())
+    if output_file:
+        root_logger.addHandler(logging.FileHandler(output_file))
+    else:
+        root_logger.addHandler(logging.StreamHandler())
 
 
 if __name__ == "__main__":

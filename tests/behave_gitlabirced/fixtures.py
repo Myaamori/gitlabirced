@@ -5,7 +5,8 @@ import logging
 import threading
 import time
 
-from gitlabirced.cli import Client
+from gitlabirced.cli import Client, _configure_logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +98,8 @@ def irc_server(context, port=0):
 @fixture
 def run_bot(context, config_file):
     logger.info('FIXTURE run_bot starting')
-    bot = Client(config_file, 4)
+    _configure_logging(4)
+    bot = Client(config_file)
     bot.start()
     # Wait a bit for bot to connect to IRC servers
     time.sleep(0.1)

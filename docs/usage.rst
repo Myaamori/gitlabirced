@@ -13,11 +13,10 @@ Command line usage::
 
     Usage: gitlabirced [OPTIONS] CONFIG_FILE
 
-      Console script for gitlabirced.
-
     Options:
-      -v, --verbose
-      --help         Show this message and exit.
+      -v, --verbose   Verbose mode (-vvv for more, -vvvv max)
+      -l, --log TEXT  Log output to this file
+      --help          Show this message and exit.
 
 Config file
 -----------
