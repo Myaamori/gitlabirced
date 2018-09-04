@@ -65,14 +65,18 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         http_server_logger.info("Hook received")
 
+        json_params = None
         try:
             self._check_token()
             json_params = self._check_and_get_request_data()
+
             handler = getattr(
                 self, '_handle_%s' % json_params.get('object_kind'))
             handler(json_params)
         except RequestException as re:
-            http_server_logger.error(re.status)
+            if json_params:
+                http_server_logger.debug('JSON PARAMS: %s' % json_params)
+            http_server_logger.exception(re.status)
             self.send_response(re.code, re.status)
         except Exception:
             http_server_logger.exception("Internal server error")
