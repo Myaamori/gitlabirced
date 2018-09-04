@@ -210,6 +210,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     @staticmethod
     def simple_past(verb):
+        if verb.endswith('ed'):
+            return verb
         if not verb.endswith('e'):
             verb = verb + 'e'
         verb = verb + 'd'
