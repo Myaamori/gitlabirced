@@ -83,8 +83,18 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
                 connection.privmsg('NickServ', 'IDENTIFY {password}'.format(
                     password=self.nickpass))
 
+        self._join_channels(connection)
+
+    def _join_channels(self, connection):
         for ch in self.channels_to_join:
             connection.join(ch)
+
+    def on_nochanmodes(self, connection, event):
+        # We couldn't join a channel, wait and retry
+        timeout = 10
+        self._log_info("NOCHANMODES retry to join in %s seconds" % timeout)
+        time.sleep(timeout)
+        self._join_channels(connection)
 
     def on_disconnect(self, connection, event):
         if not self._stop_process_forever:
