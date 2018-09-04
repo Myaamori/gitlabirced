@@ -124,18 +124,18 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
                 continue
 
             msg = e.arguments[0].split()
-            mr_regex = r'#([0-9]+)'
-            issue_regex = r'!([0-9]+)'
+            mr_regex = r'!([0-9]+)'
+            issue_regex = r'#([0-9]+)'
             for m in msg:
-                issue_match = re.match(mr_regex, m)
+                issue_match = re.match(issue_regex, m)
                 if issue_match:
-                    self._log_info("PUBMSG contains MR mention (%s)" % m)
-                    self._fetch_and_say(c, 'mr', issue_match.group(1), w)
-
-                mr_match = re.match(issue_regex, m)
-                if mr_match:
                     self._log_info("PUBMSG contains ISSUE mention (%s)" % m)
-                    self._fetch_and_say(c, 'issue', mr_match.group(1), w)
+                    self._fetch_and_say(c, 'issue', issue_match.group(1), w)
+
+                mr_match = re.match(mr_regex, m)
+                if mr_match:
+                    self._log_info("PUBMSG contains MR mention (%s)" % m)
+                    self._fetch_and_say(c, 'mr', mr_match.group(1), w)
 
             # Only one watcher allowed per channel. Stop.
             break
@@ -167,10 +167,10 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
 
         if kind == 'issue':
             url_template = 'api/v4/projects/{project}/issues/{number}'
-            prefix_template = 'Issue !{number}:'
+            prefix_template = 'Issue #{number}:'
         elif kind == 'mr':
             url_template = 'api/v4/projects/{project}/merge_requests/{number}'
-            prefix_template = 'MR #{number}:'
+            prefix_template = 'MR !{number}:'
 
         url = urllib.parse.urljoin(server, url_template.format(
             project=project_encoded, number=number))

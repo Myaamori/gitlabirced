@@ -39,20 +39,22 @@ class BaseIRCClientTestCase(unittest.TestCase):
     def test_on_pubmsg_issue(self):
         self.title = "Title of the issue"
         self.code = 200
-        expected_msg = ("(#target) Issue !12: Title of the issue https://"
+
+        expected_msg = ("(#target) Issue #12: Title of the issue https://"
                         "gitlab.com/api/v4/projects/namespace%2Fproject/"
                         "issues/12")
 
-        self._test_on_pubmsg_generic('show me !12 plz', expected_msg)
+        self._test_on_pubmsg_generic('show me #12 plz', expected_msg)
 
     def test_on_pubmsg_mr(self):
         self.title = "Title of the mr"
         self.code = 200
-        expected_msg = ("(#target) MR #12: Title of the mr https://"
+
+        expected_msg = ("(#target) MR !12: Title of the mr https://"
                         "gitlab.com/api/v4/projects/namespace%2Fproject/"
                         "merge_requests/12")
 
-        self._test_on_pubmsg_generic('show me #12 plz', expected_msg)
+        self._test_on_pubmsg_generic('show me !12 plz', expected_msg)
 
     def _test_on_pubmsg_generic(self, msg, expected):
         event = Event('pubmsg', '@somebody', self.target, [msg])
