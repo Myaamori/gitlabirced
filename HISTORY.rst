@@ -2,6 +2,16 @@
 History
 =======
 
+0.2.1 (2018-xx-xx)
+------------------
+
+* Improved connection to channels that need registration to join.
+
+0.2.1 (2018-09-03)
+------------------
+
+* Small bug fix release. We were missing some dependencies
+
 0.2.0 (2018-09-03)
 ------------------
 
