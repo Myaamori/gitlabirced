@@ -156,9 +156,13 @@ def _configure_logging(verbosity, output_file=None):
         our_logger.setLevel(our_level)
 
     if output_file:
-        root_logger.addHandler(logging.FileHandler(output_file))
+        handler = logging.FileHandler(output_file)
     else:
-        root_logger.addHandler(logging.StreamHandler())
+        handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    root_logger.addHandler(handler)
 
 
 if __name__ == "__main__":

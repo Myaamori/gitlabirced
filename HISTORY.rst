@@ -2,11 +2,12 @@
 History
 =======
 
-0.2.2 (2018-xx-xx)
+0.2.2 (2018-09-06)
 ------------------
 
 * Improved connection to channels that need registration to join.
 * Fixed issue and mr detection on watchers.
+* Include more information in logging lines.
 
 0.2.1 (2018-09-03)
 ------------------
