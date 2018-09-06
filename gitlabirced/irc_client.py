@@ -65,6 +65,12 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
     def on_privnotice(self, c, e):
         self._log_info("PRIVNOTICE: %s" % e.arguments[0])
 
+    def on_nicknameinuse(self, c, e):
+        # TODO: Try to retake nick? Or use a different one?
+        # Probably best to try to retake nick, see gerrit bot
+        # for implementation reference.
+        pass
+
     def on_error(self, c, e):
         error = ""
         if len(e.arguments) > 0:
