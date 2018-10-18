@@ -13,7 +13,6 @@ class MyHTTPServer(HTTPServer):
         self.token = token
         self.hooks = hooks
         self.bots = bots
-        self.issue_last_action = {}
 
 
 class RequestException(Exception):
@@ -148,20 +147,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         if issue_action == 'update':
             self.send_response(200, "OK")
             return
-
-        project_issue_n = '{project}-{issue_number}'.format(
-            project=project,
-            issue_number=issue_number)
-
-        last_action = self.server.issue_last_action.get(project_issue_n)
-
-        # Don't trigger repeated events.
-        if issue_action == last_action:
-            self.send_response(200, "OK")
-            return
-
-        # Update last action on this issue
-        self.server.issue_last_action[project_issue_n] = issue_action
 
         display_action = self.simple_past(issue_action)
 

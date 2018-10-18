@@ -46,10 +46,6 @@ Feature: Testing watchers functionality
            root opened issue #23 (New API: create/update/delete file) on Pa Example http://example.com/diaspora/issues/23
            """
 
-      When an issue "open" hook about project "pa/example" is received
-      Then network "freenode" channel "#chan3" contains "1" messages
-       And network "freenode" channel "#chan4" contains "1" messages
-
       When an issue "close" hook about project "pa/example" is received
       Then network "freenode" channel "#chan3" contains "2" messages
        And network "freenode" channel "#chan3" last long message is
