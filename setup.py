@@ -38,6 +38,7 @@ setup(
         ],
     },
     install_requires=requirements,
+    python_requires='>=3',
     license="MIT license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
