@@ -2,6 +2,12 @@
 History
 =======
 
+0.2.3 (2018-10-18)
+------------------
+
+* Added support for update issue label hooks
+* Stopped ignoring repeated issue hooks
+
 0.2.2 (2018-09-06)
 ------------------
 
