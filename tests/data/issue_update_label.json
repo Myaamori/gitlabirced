@@ -1,0 +1,155 @@
+{
+  "object_kind": "issue",
+  "event_type": "issue",
+  "user": {
+    "name": "Agustin Benito Bethencourt",
+    "username": "toscalix",
+    "avatar_url": "https://secure.gravatar.com/avatar/0ae52df94bc1ce47aec0ac610486bc9d?s=80&d=identicon"
+  },
+  "project": {
+    "id": 1975139,
+    "name": "buildstream",
+    "description": "BuildStream is a flexible and extensible framework for the modelling of build pipelines in a declarative YAML format, written in python.",
+    "web_url": "https://gitlab.com/BuildStream/buildstream",
+    "avatar_url": "https://assets.gitlab-static.net/uploads/-/system/project/avatar/1975139/buildstream-beaver-placeholder.jpg",
+    "git_ssh_url": "git@gitlab.com:BuildStream/buildstream.git",
+    "git_http_url": "https://gitlab.com/BuildStream/buildstream.git",
+    "namespace": "BuildStream",
+    "visibility_level": 20,
+    "path_with_namespace": "palvarez89/definitions",
+    "default_branch": "master",
+    "ci_config_path": "",
+    "homepage": "https://gitlab.com/BuildStream/buildstream",
+    "url": "git@gitlab.com:BuildStream/buildstream.git",
+    "ssh_url": "git@gitlab.com:BuildStream/buildstream.git",
+    "http_url": "https://gitlab.com/BuildStream/buildstream.git"
+  },
+  "object_attributes": {
+    "author_id": 106167,
+    "closed_at": "None",
+    "confidential": "False",
+    "created_at": "2018-09-12 14:41:30 UTC",
+    "description": "## Background\n\nhttps://snapcraft.io/\n\nBuildstream is able to generate flatpaks at the moment, it would be interesting to be able to also generate snaps with the same metadata\n\n## Task description\n* [ ] Create plugin to deploy snaps\n\n## Acceptance Criteria\n\n* [ ] It's possible to deploy snaps and flatpaks with the same metadata",
+    "due_date": "None",
+    "id": 14096299,
+    "iid": 650,
+    "last_edited_at": "None",
+    "last_edited_by_id": "None",
+    "milestone_id": "None",
+    "moved_to_id": "None",
+    "project_id": 1975139,
+    "relative_position": 1074089323,
+    "state": "opened",
+    "time_estimate": 0,
+    "title": "RFE: Add plugin to generate snaps",
+    "updated_at": "2018-10-01 08:00:08 UTC",
+    "updated_by_id": 455007,
+    "weight": "None",
+    "url": "https://gitlab.com/BuildStream/buildstream/issues/650",
+    "total_time_spent": 0,
+    "human_total_time_spent": "None",
+    "human_time_estimate": "None",
+    "assignee_ids": [],
+    "assignee_id": "None",
+    "action": "update"
+  },
+  "labels": [{
+    "id": 1935119,
+    "title": "Enhancement",
+    "color": "#0033CC",
+    "project_id": 1975139,
+    "created_at": "2017-04-29 06:00:04 UTC",
+    "updated_at": "2017-10-04 12:12:19 UTC",
+    "template": "False",
+    "description": "",
+    "type": "ProjectLabel",
+    "group_id": "None"
+  }, {
+    "id": 4079926,
+    "title": "Important",
+    "color": "#D1D130",
+    "project_id": "None",
+    "created_at": "2018-05-18 12:47:33 UTC",
+    "updated_at": "2018-05-18 12:47:33 UTC",
+    "template": "False",
+    "description": "Priority level 2/4: important.",
+    "type": "GroupLabel",
+    "group_id": 1374019
+  }, {
+    "id": 4079928,
+    "title": "To Do",
+    "color": "#F0AD4E",
+    "project_id": "None",
+    "created_at": "2018-05-18 12:48:04 UTC",
+    "updated_at": "2018-05-18 12:48:23 UTC",
+    "template": "False",
+    "description": "Actions evaluated and approved. To be executed.",
+    "type": "GroupLabel",
+    "group_id": 1374019
+  }],
+  "changes": {
+    "updated_at": {
+      "previous": "2018-10-01 08:00:08 UTC",
+      "current": "2018-10-01 08:00:08 UTC"
+    },
+    "updated_by_id": {
+      "previous": "None",
+      "current": 455007
+    },
+    "labels": {
+      "previous": [{
+        "id": 1935119,
+        "title": "Enhancement",
+        "color": "#0033CC",
+        "project_id": 1975139,
+        "created_at": "2017-04-29 06:00:04 UTC",
+        "updated_at": "2017-10-04 12:12:19 UTC",
+        "template": "False",
+        "description": "",
+        "type": "ProjectLabel",
+        "group_id": "None"
+      }],
+      "current": [{
+        "id": 1935119,
+        "title": "Enhancement",
+        "color": "#0033CC",
+        "project_id": 1975139,
+        "created_at": "2017-04-29 06:00:04 UTC",
+        "updated_at": "2017-10-04 12:12:19 UTC",
+        "template": "False",
+        "description": "",
+        "type": "ProjectLabel",
+        "group_id": "None"
+      }, {
+        "id": 4079926,
+        "title": "Important",
+        "color": "#D1D130",
+        "project_id": "None",
+        "created_at": "2018-05-18 12:47:33 UTC",
+        "updated_at": "2018-05-18 12:47:33 UTC",
+        "template": "False",
+        "description": "Priority level 2/4: important.",
+        "type": "GroupLabel",
+        "group_id": 1374019
+      }, {
+        "id": 4079928,
+        "title": "To Do",
+        "color": "#F0AD4E",
+        "project_id": "None",
+        "created_at": "2018-05-18 12:48:04 UTC",
+        "updated_at": "2018-05-18 12:48:23 UTC",
+        "template": "False",
+        "description": "Actions evaluated and approved. To be executed.",
+        "type": "GroupLabel",
+        "group_id": 1374019
+      }]
+    }
+  },
+  "repository": {
+    "name": "buildstream",
+    "url": "git@gitlab.com:BuildStream/buildstream.git",
+    "description": "BuildStream is a flexible and extensible framework for the modelling of build pipelines in a declarative YAML format, written in python.",
+    "homepage": "https://gitlab.com/BuildStream/buildstream"
+  }
+}
+

@@ -46,10 +46,6 @@ Feature: Testing watchers functionality
            root opened issue #23 (New API: create/update/delete file) on Pa Example http://example.com/diaspora/issues/23
            """
 
-      When an issue "open" hook about project "pa/example" is received
-      Then network "freenode" channel "#chan3" contains "1" messages
-       And network "freenode" channel "#chan4" contains "1" messages
-
       When an issue "close" hook about project "pa/example" is received
       Then network "freenode" channel "#chan3" contains "2" messages
        And network "freenode" channel "#chan3" last long message is
@@ -98,4 +94,25 @@ Feature: Testing watchers functionality
        And network "freenode" channel "#chan6" last long message is
            """
            root closed MR !1 (ms-viewport->master: MS-Viewport) on Pa Another http://example.com/diaspora/merge_requests/1
+           """
+
+  Scenario: Send a single issue label update hook
+     Given a gitlabirced hook
+        | key       | value               |
+        | project   | pa/example_label    |
+        | network   | freenode            |
+        | report    | #chan7: issue_label |
+        | report    | #chan8: issue_label |
+       And gitlabirced running
+      When an issue update "label" hook about project "pa/example_label" is received
+      Then network "freenode" channel "#chan7" contains "1" messages
+       And network "freenode" channel "#chan7" last long message is
+           """
+           toscalix added 'Important', 'To Do' label(s) to issue #650 (RFE: Add plugin to generate snaps) on Pa Example_Label https://gitlab.com/BuildStream/buildstream/issues/650
+           """
+
+      Then network "freenode" channel "#chan8" contains "1" messages
+       And network "freenode" channel "#chan8" last long message is
+           """
+           toscalix added 'Important', 'To Do' label(s) to issue #650 (RFE: Add plugin to generate snaps) on Pa Example_Label https://gitlab.com/BuildStream/buildstream/issues/650
            """
