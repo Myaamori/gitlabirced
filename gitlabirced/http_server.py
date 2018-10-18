@@ -143,12 +143,35 @@ class RequestHandler(BaseHTTPRequestHandler):
         except KeyError:
             raise RequestException(400, "Missing data in the request")
 
-        # Don't trigger the hook on issue's update
-        if issue_action == 'update':
-            self.send_response(200, "OK")
-            return
-
         display_action = self.simple_past(issue_action)
+        hook_key = 'issue'
+        if issue_action == 'update':
+            changes = json_params['changes']
+            if "labels" in changes:
+                previous = [label['title']
+                            for label in changes['labels']['previous']]
+                current = [label['title']
+                           for label in changes['labels']['current']]
+                added = list(set(current).difference(previous))
+                removed = list(set(previous).difference(current))
+                # Be deterministic
+                added.sort()
+                removed.sort()
+                added_quoted = ", ".join(["'%s'" % l for l in added])
+                removed_quoted = ", ".join(["'%s'" % l for l in removed])
+                chg_msg = ""
+                if added:
+                    chg_msg += "added %s " % added_quoted
+                if added and removed:
+                    chg_msg += "and "
+                if removed:
+                    chg_msg += "removed %s " % removed_quoted
+                chg_msg += "label(s) to"
+                hook_key = 'issue_label'
+            else:
+                # Unsupported update hook
+                return
+            display_action = chg_msg
 
         msg = ('{user} {display_action} issue #{issue_number} '
                '({issue_title}) on {project_name} {url}'
@@ -156,7 +179,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                        issue_number=issue_number, issue_title=issue_title,
                        project_name=project_name, url=url))
 
-        self._send_message_to_all('issue', project, msg)
+        self._send_message_to_all(hook_key, project, msg)
 
     def _handle_merge_request(self, json_params):
         http_server_logger.info('handling merge_request')
