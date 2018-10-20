@@ -126,7 +126,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                                num_commits=num_commits,
                                last_commit_msg=last_commit_msg))
 
-        self._send_message_to_all('push', project, msg, branch_name)
+        self._send_message_to_all('push', project, msg, branch=branch_name)
 
     def _handle_issue(self, json_params):
         http_server_logger.info('handling issue')
@@ -180,7 +180,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                        issue_number=issue_number, issue_title=issue_title,
                        project_name=project_name, url=url))
 
-        self._send_message_to_all(hook_key, project, msg)
+        self._send_message_to_all(
+            hook_key, project, msg, 'issue', issue_number)
 
     def _handle_merge_request(self, json_params):
         http_server_logger.info('handling merge_request')
@@ -199,27 +200,21 @@ class RequestHandler(BaseHTTPRequestHandler):
             url = request['url']
         except KeyError:
             raise RequestException(400, "Missing data in the request")
-        print('all data')
 
         display_action = self.simple_past(request_action)
         hook_key = 'merge_request'
         if request_action == 'update':
             changes = json_params['changes']
-            print('update')
             chg_msg = ""
             if "assignee" in changes:
-                print('assignee')
                 hook_key = 'merge_request_assignee'
                 previous = changes['assignee']['previous']
                 current = changes['assignee']['current']
-                print("starting with msg")
                 # If current is empty, it's an unassignment
                 if current:
                     chg_msg = "assigned %s to" % current['username']
                 else:
                     chg_msg = "unassigned %s from" % previous['username']
-                print(chg_msg)
-
             else:
                 # Unsupported update hook
                 self.send_response(200, "OK")
@@ -234,7 +229,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                        to_branch=to_branch, request_title=request_title,
                        project_name=project_name, url=url))
 
-        self._send_message_to_all(hook_key, project, msg)
+        self._send_message_to_all(
+            hook_key, project, msg, 'merge_request', request_number)
 
     @staticmethod
     def simple_past(verb):
@@ -245,7 +241,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         verb = verb + 'd'
         return verb
 
-    def _send_message_to_all(self, kind, project, msg, branch=None):
+    def _send_message_to_all(self, hook_key, project, msg,
+                             kind=None, number=None, branch=None):
         hooks = self.server.hooks
         bots = self.server.bots
         for h in hooks:
@@ -257,9 +254,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                 if branch and branch not in branches:
                     continue
                 for r in reports:
-                    if kind in reports[r]:
+                    if hook_key in reports[r]:
                         http_server_logger.info('sending to %s, in network %s'
                                                 % (r, network))
                         bot.connection.privmsg(r, msg)
+                        if kind and number:
+                            bot._update_mentions(r, kind, number)
 
         self.send_response(200, "OK")

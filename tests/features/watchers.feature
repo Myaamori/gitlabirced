@@ -55,3 +55,25 @@ Feature: Testing watchers functionality
       When client comments "!23" on "gimpnet" channel "#channel4"
       Then network "gimpnet" channel "#channel4" contains "19" messages
        And network "gimpnet" channel "#channel4" last message is about merge request "23" project "bst/bar"
+
+  Scenario: Send merge request number after hook
+     Given a gitlabirced watcher
+        | key       | value     |
+        | network   | freenode  |
+        | channel   | #channel5 |
+        | project   | meh/oop   |
+       And a gitlabirced hook
+        | key       | value                    |
+        | project   | meh/oop                  |
+        | network   | freenode                 |
+        | report    | #channel5: merge_request |
+       And gitlabirced running
+      When a merge request "open" hook about project "meh/oop" is received
+      Then network "freenode" channel "#channel5" contains "1" messages
+       And network "freenode" channel "#channel5" last long message is
+           """
+           root opened MR !1 (ms-viewport->master: MS-Viewport) on Meh Oop http://example.com/diaspora/merge_requests/1
+           """
+      When client comments "!1" on "freenode" channel "#channel5"
+      Then network "freenode" channel "#channel5" contains "2" messages
+       And network "freenode" channel "#channel5" last message is "!1"

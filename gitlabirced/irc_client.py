@@ -150,7 +150,8 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
                 mr_match = re.match(mr_regex, m)
                 if mr_match:
                     self._log_info("PUBMSG contains MR mention (%s)" % m)
-                    self._fetch_and_say(c, 'mr', mr_match.group(1), w)
+                    self._fetch_and_say(
+                        c, 'merge_request', mr_match.group(1), w)
 
             # Only one watcher allowed per channel. Stop.
             break
@@ -183,7 +184,7 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
         if kind == 'issue':
             url_template = 'api/v4/projects/{project}/issues/{number}'
             prefix_template = 'Issue #{number}:'
-        elif kind == 'mr':
+        elif kind == 'merge_request':
             url_template = 'api/v4/projects/{project}/merge_requests/{number}'
             prefix_template = 'MR !{number}:'
 
