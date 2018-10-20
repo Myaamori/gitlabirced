@@ -106,9 +106,18 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
         if not self._stop_process_forever:
             timeout = 10
             self._log_info("DISCONNECT reconnecting in %s seconds" % timeout)
-            # Wait a bit to avoid throttling
-            time.sleep(timeout)
-            connection.reconnect()
+            connected = False
+            while not connected:
+                # Wait a bit to avoid throttling
+                time.sleep(timeout)
+                try:
+                    connection.reconnect()
+                except irc.client.ServerConnectionError as e:
+                    self._log_error(
+                        "Failed to reconnect. Reconnecting in %s seconds."
+                        "Reason: %s" % (timeout, e))
+                else:
+                    connected = True
 
     def _update_count(self, channel):
         count = self.count_per_channel.get(channel, 0) + 1
