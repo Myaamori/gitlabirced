@@ -2,10 +2,11 @@
 History
 =======
 
-Next
-----
+0.3.0 (2018-10-20)
+------------------
 
 * Added support for update MR assignee hooks
+* Improved reconnection failures
 
 0.2.3 (2018-10-18)
 ------------------
