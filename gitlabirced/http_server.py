@@ -170,6 +170,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 hook_key = 'issue_label'
             else:
                 # Unsupported update hook
+                self.send_response(200, "OK")
                 return
             display_action = chg_msg
 
@@ -198,13 +199,32 @@ class RequestHandler(BaseHTTPRequestHandler):
             url = request['url']
         except KeyError:
             raise RequestException(400, "Missing data in the request")
-
-        # Don't trigger the hook on issue's update
-        if request_action == 'update':
-            self.send_response(200, "OK")
-            return
+        print('all data')
 
         display_action = self.simple_past(request_action)
+        hook_key = 'merge_request'
+        if request_action == 'update':
+            changes = json_params['changes']
+            print('update')
+            chg_msg = ""
+            if "assignee" in changes:
+                print('assignee')
+                hook_key = 'merge_request_assignee'
+                previous = changes['assignee']['previous']
+                current = changes['assignee']['current']
+                print("starting with msg")
+                # If current is empty, it's an unassignment
+                if current:
+                    chg_msg = "assigned %s to" % current['username']
+                else:
+                    chg_msg = "unassigned %s from" % previous['username']
+                print(chg_msg)
+
+            else:
+                # Unsupported update hook
+                self.send_response(200, "OK")
+                return
+            display_action = chg_msg
 
         msg = ('{user} {display_action} MR !{request_number} '
                '({from_branch}->{to_branch}: {request_title}) '
@@ -214,7 +234,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                        to_branch=to_branch, request_title=request_title,
                        project_name=project_name, url=url))
 
-        self._send_message_to_all('merge_request', project, msg)
+        self._send_message_to_all(hook_key, project, msg)
 
     @staticmethod
     def simple_past(verb):
