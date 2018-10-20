@@ -2,6 +2,11 @@
 History
 =======
 
+Next
+----
+
+* Added support for update MR assignee hooks
+
 0.2.3 (2018-10-18)
 ------------------
 
