@@ -5,6 +5,8 @@ History
 Next
 ----
 
+* Improved reconnection on initial failure
+* Added support for MR revision changes
 * Improved anti-spam control
 
 0.3.0 (2018-10-20)
