@@ -206,7 +206,11 @@ class RequestHandler(BaseHTTPRequestHandler):
         if request_action == 'update':
             changes = json_params['changes']
             chg_msg = ""
-            if "assignee" in changes:
+            if "oldrev" in request:
+                hook_key = 'merge_request_update'
+                chg_msg = "updated commits on"
+
+            elif "assignee" in changes:
                 hook_key = 'merge_request_assignee'
                 previous = changes['assignee']['previous']
                 current = changes['assignee']['current']
