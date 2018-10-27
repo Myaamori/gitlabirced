@@ -237,6 +237,9 @@ def connect_networks(networks, watchers):
         irc_client_logger.info('Starting client for server %s' % server)
         thread = threading.Thread(target=bot.start)
         thread.start()
+        # Schedule a reconnection
+        # Submitted upstream: https://github.com/jaraco/irc/pull/156
+        bot.recon.run(bot)
 
         result[net] = {
             'process': thread,
