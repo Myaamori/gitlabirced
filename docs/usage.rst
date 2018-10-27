@@ -47,7 +47,7 @@ An example configuration file ::
     - project: palvarez89/definitions
       network: freenode
       reports:
-        '##ironfoot': push, merge_request, issue, issue_label, merge_request_assignee
+        '##ironfoot': push, merge_request, issue, issue_label, merge_request_assignee, merge_request_update
         '##ironfoot2': push, merge_request, issue
         'ironfoot': push, merge_request, issue
       branches: master
