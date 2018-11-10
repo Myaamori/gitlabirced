@@ -197,6 +197,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             request_number = request['iid']
             request_title = request['title'].strip()
             request_action = request['action']
+            request_wip = request['work_in_progress']
             url = request['url']
         except KeyError:
             raise RequestException(400, "Missing data in the request")
@@ -209,6 +210,21 @@ class RequestHandler(BaseHTTPRequestHandler):
             if "oldrev" in request:
                 hook_key = 'merge_request_update'
                 chg_msg = "updated commits on"
+
+            elif "title" in changes:
+                def is_title_wip(title):
+                    title_lower = title.lower()
+                    flags = ["[WIP]", "WIP:", "WIP "]
+                    for flag in flags:
+                        if flag.lower() in title_lower:
+                            return True
+                    return False
+                was_wip = is_title_wip(changes['title']['previous'])
+                if was_wip and not request_wip:
+                    chg_msg = "opened (was WIP)"
+                else:
+                    hook_key = 'merge_request_title'
+                    chg_msg = "changed title of"
 
             elif "assignee" in changes:
                 hook_key = 'merge_request_assignee'
@@ -234,7 +250,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                        project_name=project_name, url=url))
 
         self._send_message_to_all(
-            hook_key, project, msg, 'merge_request', request_number)
+            hook_key, project, msg, 'merge_request', request_number,
+            is_wip=request_wip)
 
     @staticmethod
     def simple_past(verb):
@@ -246,7 +263,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         return verb
 
     def _send_message_to_all(self, hook_key, project, msg,
-                             kind=None, number=None, branch=None):
+                             kind=None, number=None, branch=None,
+                             is_wip=False):
         hooks = self.server.hooks
         bots = self.server.bots
         for h in hooks:
@@ -254,8 +272,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                 network = h['network']
                 reports = h['reports']
                 branches = h.get('branches', '').split()
+                show_wips = h.get('wip', False)
                 bot = bots[network]['bot']
                 if branch and branch not in branches:
+                    continue
+                if not show_wips and is_wip:
                     continue
                 for r in reports:
                     if hook_key in reports[r]:
