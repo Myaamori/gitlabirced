@@ -99,7 +99,7 @@
     "email": "valentin.david@codethink.co.uk"
       }
     },
-    "work_in_progress": "False",
+    "work_in_progress": false,
     "total_time_spent": 0,
     "human_total_time_spent": "None",
     "human_time_estimate": "None",
