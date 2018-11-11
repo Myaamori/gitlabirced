@@ -51,6 +51,7 @@ An example configuration file ::
         '##ironfoot2': push, merge_request, issue
         'ironfoot': push, merge_request, issue
       branches: master
+      wip: yes
 
     watchers:
     - network: gimp
