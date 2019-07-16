@@ -34,7 +34,7 @@ def main(config_file, verbose, log):
 def load_config(config_file):
     try:
         with open(config_file, 'r') as stream:
-            config = yaml.load(stream)
+            config = yaml.safe_load(stream)
             print("Configuration loaded %s" % config)
     except yaml.YAMLError as exc:
         print(exc)

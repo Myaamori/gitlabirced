@@ -21,7 +21,7 @@ Command line usage::
 Config file
 -----------
 
-An example configuration file ::
+An example configuration file: ::
 
     networks:
       gimp:
@@ -61,3 +61,13 @@ An example configuration file ::
 
     port: 1337
     token: 12345
+
+
+If you want to use the bot for a private project you can specify a GitLab Personal Access token in the watcher section like so: ::
+
+    watchers:
+    - network: gimp
+      channel: '##ironfoot3'
+      project: baserock/definitions
+      server: http://gitlab.com
+      gitlabtoken: yourtoken
