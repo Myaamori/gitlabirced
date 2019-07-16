@@ -176,6 +176,7 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
         server = watcher.get('server', 'https://gitlab.com')
         target = watcher['channel']
         project_encoded = urllib.parse.quote(watcher['project'], safe='')
+        gitlabToken = watcher.get('gitlabtoken', '')
 
         if self._mentioned_recently(target, kind, number):
             self._log_debug("_fetch_and_say decides not to react")
@@ -193,12 +194,12 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
 
         self._log_debug("_fetch_and_say will query %s" % url)
 
-        status, info = self._fetch_gitlab_info(url)
+        status, info = self._fetch_gitlab_info(url, gitlabToken)
         if status != 200:
             self._log_error("Failed to query %s" % url)
             return
 
-        self._log_info("Ttile %s" % info['title'])
+        self._log_info("Title %s" % info['title'])
         self._log_info("URL   %s" % info['web_url'])
         prefix = prefix_template.format(number=number)
         info_text = '{prefix} {title} {url}'.format(
@@ -208,8 +209,11 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
         c.privmsg(target, info_text)
         self._update_mentions(target, kind, number)
 
-    def _fetch_gitlab_info(self, url):
-        data = requests.get(url)
+    def _fetch_gitlab_info(self, url, gitlabToken):
+        data = requests.get(
+               url,
+               headers={'PRIVATE-TOKEN': '{}'.format(gitlabToken)}
+            )
         return data.status_code, data.json()
 
 

@@ -6,7 +6,7 @@ from gitlabirced.irc_client import MyIRCClient
 
 
 class BaseIRCClientTestCase(unittest.TestCase):
-    def _fake_info(self, url):
+    def _fake_info(self, url, gitlabToken):
         return self.code, {'title': self.title,
                            'web_url': url}
 
