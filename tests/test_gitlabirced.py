@@ -30,7 +30,7 @@ def test_command_line_interface_no_args():
     runner = CliRunner()
     result = runner.invoke(cli.main)
     assert result.exit_code == 2
-    assert 'Error: Missing argument "CONFIG_FILE"' in result.output
+    assert 'Error: Missing argument "config-file"' in result.output
 
 
 def test_command_line_interface():
