@@ -54,8 +54,16 @@ def step_client_comments(context, message, network, channel, times=1):
     # Use a random nick every time, otherwise we will have
     # problems with race conditions, given that the client
     # won't disconnect before the new connection.
-    nick = ''.join(random.choices(
-        string.ascii_uppercase + string.digits, k=5))
+    try:
+        nick = ''.join(random.choices(
+            string.ascii_uppercase + string.digits, k=5))
+    except AttributeError:
+        # Compatibility with Python 3.5 as random.choices was added in 3.6:
+        # https://docs.python.org/3/library/random.html#random.choices
+        nick_list = [random.choice(string.ascii_uppercase + string.digits)
+                     for _ in range(5)]
+        nick = ''.join(nick_list)
+
     nick = "peter_%s" % nick
     c = IRCMessageSender(channel, message)
     c.connect(irc_server.host, irc_server.port, nick)
