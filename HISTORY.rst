@@ -2,6 +2,11 @@
 History
 =======
 
+0.4.2 (2019-07-17)
+------------------
+
+* Small release to fix the coverage badge in PyPI
+
 0.4.1 (2019-07-17)
 ------------------
 
