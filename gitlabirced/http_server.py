@@ -48,7 +48,12 @@ class RequestHandler(BaseHTTPRequestHandler):
             raise RequestException(400, "Request didn't contain data")
 
         try:
-            json_params = json.loads(json_payload)
+            try:
+                json_params = json.loads(json_payload)
+            except TypeError:
+                # Python 3.5 json.loads doesn't support binary input
+                # https://docs.python.org/3/whatsnew/3.6.html#json
+                json_params = json.loads(json_payload.decode('utf-8'))
         except json.decoder.JSONDecodeError:
             raise RequestException(400, "JSON data couldn't be parsed")
 

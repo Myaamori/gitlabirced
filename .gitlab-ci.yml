@@ -4,12 +4,26 @@ stages:
 - test
 - deploy
 
-tests:
+tests-py36:
   stage: test
   coverage: '/TOTAL +\d+ +\d+ +(\d+)%/'
   script:
   - pip3 install tox
-  - tox
+  - tox -e py36,tests, flake8, behave
+
+tests-py35:
+  stage: test
+  image: python:3.5
+  script:
+  - pip3 install tox
+  - tox -e py35,tests,flake8,behave
+
+tests-py37:
+  stage: test
+  image: python:3.7
+  script:
+  - pip3 install tox
+  - tox -e py37,tests,flake8,behave
 
 docs:
   stage: test
