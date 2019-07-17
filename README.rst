@@ -9,7 +9,7 @@ GitlabIRCed
 .. image:: https://gitlab.com/palvarez89/gitlabirced/badges/master/pipeline.svg
         :target: https://gitlab.com/palvarez89/gitlabirced/commits/master
 
-.. image:: https://gitlab.com/palvarez89/gitlabirced/badges/master/coverage.svg?job=tests
+.. image:: https://gitlab.com/palvarez89/gitlabirced/badges/master/coverage.svg?job=tests-py36
         :target: https://gitlab.com/palvarez89/gitlabirced/commits/master
 
 .. image:: https://readthedocs.org/projects/gitlabirced/badge/?version=latest
