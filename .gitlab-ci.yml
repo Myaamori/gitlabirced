@@ -9,7 +9,7 @@ tests-py36:
   coverage: '/TOTAL +\d+ +\d+ +(\d+)%/'
   script:
   - pip3 install tox
-  - tox -e py36,tests, flake8, behave
+  - tox -e py36,tests,flake8,behave
 
 tests-py35:
   stage: test
