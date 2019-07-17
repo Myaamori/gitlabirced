@@ -2,6 +2,18 @@
 History
 =======
 
+0.4.1 (2019-07-17)
+------------------
+
+* Added support for Python 3.5. Now this version
+  is also tested in the CI.
+* Added support for Gitlab Personal Access Tocken in
+  the 'watchers' section. Now you can watch private
+  projects. Thanks Jonathan!
+* Frozen dependencies in the requirements.txt file,
+  to avoid random issues like the one fixed in fb99ad91
+  (yaml.load vs yaml.safe_load).
+
 0.4.0 (2018-11-11)
 ------------------
 
