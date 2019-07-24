@@ -31,11 +31,12 @@ An example configuration file: ::
         auth: NickServ
         pass: notapassword
       freenode:
-        url: irc.freenode.org
-        port: 6667
+        url: chat.freenode.org
+        port: 6697
         nick: gitlabirced
         auth: sasl
         pass: notapassword
+        ssl: yes
 
     hooks:
     - project: palvarez89/definitions

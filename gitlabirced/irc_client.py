@@ -7,6 +7,7 @@ import threading
 import time
 import re
 import requests
+import ssl
 import urllib
 
 irc_client_logger = logging.getLogger(__name__)
@@ -14,14 +15,20 @@ irc_client_logger = logging.getLogger(__name__)
 
 class MyIRCClient(irc.bot.SingleServerIRCBot):
     def __init__(self, channels, nickname, server, net_name, port=6667,
-                 watchers=None, nickpass=None, auth_type=None):
+                 watchers=None, nickpass=None, auth_type=None, ssl_conn=False):
 
         saslpass = nickpass
         if auth_type and auth_type.lower() != 'sasl':
             saslpass = None
         spec = irc.bot.ServerSpec(server, port, saslpass)
-        irc.bot.SingleServerIRCBot.__init__(
-            self, [spec], nickname, nickname)
+
+        if ssl_conn:
+            ssl_factory = irc.connection.Factory(wrapper=ssl.wrap_socket)
+            irc.bot.SingleServerIRCBot.__init__(
+                self, [spec], nickname, nickname, connect_factory=ssl_factory)
+        else:
+            irc.bot.SingleServerIRCBot.__init__(
+                self, [spec], nickname, nickname)
 
         # Monkey patch process_forever with a custom loop that we can stop
         def process_forever(timeout=0.2):
@@ -233,11 +240,12 @@ def connect_networks(networks, watchers):
         channels = networks[net]['channels']
         password = networks[net].get('pass')
         auth_type = networks[net].get('auth')
+        ssl_conn = networks[net].get('ssl', False)
 
         # TODO: Only use password if auth is set to 'sasl'
         bot = MyIRCClient(channels, nick, server, net, port=port,
                           watchers=watchers, nickpass=password,
-                          auth_type=auth_type)
+                          auth_type=auth_type, ssl_conn=ssl_conn)
         irc_client_logger.info('Starting client for server %s' % server)
         thread = threading.Thread(target=bot.start)
         thread.start()
