@@ -273,7 +273,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         hooks = self.server.hooks
         bots = self.server.bots
         for h in hooks:
-            if h['project'] == project:
+            if 'project' not in h or h['project'] == project:
                 network = h['network']
                 reports = h['reports']
                 branches = h.get('branches', '').split()
