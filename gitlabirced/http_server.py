@@ -94,10 +94,12 @@ class RequestHandler(BaseHTTPRequestHandler):
         try:
             project = json_params['project']['path_with_namespace']
             project_name = json_params['project']['name']
+            project_url = json_params['project']['web_url']
             user = json_params['user_username']
-            commits = json_params['commits']
+            commits = json_params['commits'][-3:]
             num_commits = json_params.get('total_commits_count')
             branch_name = json_params['ref']
+            ref_before = json_params['before']
             ref_after = json_params['after']
             ref_prefix = 'refs/heads/'
             if branch_name.startswith(ref_prefix):
@@ -110,28 +112,35 @@ class RequestHandler(BaseHTTPRequestHandler):
             action = 'created'
             if ref_after == '0000000000000000000000000000000000000000':
                 action = 'deleted'
-            msg = ('{user} {action} branch {branch_name} on {project_name}.'
+            msg = ('[{project}] {user} {action} branch {branch_name}.'
                    .format(user=user, action=action,
                            branch_name=branch_name,
                            project_name=project_name))
+            self._send_message_to_all('push', project, msg, branch=branch_name)
         else:
-            last_commit = commits[-1]
-            last_commit_msg = last_commit['message'].split('\n')[0].strip()
-            pre_msg = ('{user} pushed on {project_name}@{branch_name}:'
-                       .format(user=user, project_name=project_name,
-                               branch_name=branch_name))
+            add_ellipsis = lambda m: m if len(m) <= 80 else m[:77] + "..."
+            format_commit = lambda c: add_ellipsis(c['message'].split('\n')[0].strip())
+            msgs = []
             if num_commits == 1:
-                msg = ('{pre_msg} {last_commit_msg}'
-                       .format(pre_msg=pre_msg,
-                               last_commit_msg=last_commit_msg))
+                msgs.append("[{project}] {user} pushed to {branch}: {commit}".format(
+                    project=project, user=commits[-1]['author']['name'], branch=branch_name,
+                    commit=format_commit(commits[-1])))
+                url = "{project_url}/commit/{after}".format(
+                    project_url=project_url, after=ref_after[:8])
             else:
-                msg = ('{pre_msg} {num_commits} commits (last: '
-                       '{last_commit_msg})'
-                       .format(pre_msg=pre_msg,
-                               num_commits=num_commits,
-                               last_commit_msg=last_commit_msg))
+                msgs.append("[{project}] {num_commits} commits pushed to {branch_name}{extra}:".format(
+                    project=project, num_commits=num_commits, branch_name=branch_name,
+                    extra="" if num_commits <= 3 else " (three shown)"))
+                for commit in commits:
+                    msgs.append("[{project}] {user} - {commit}".format(
+                        project=project, user=commit['author']['name'],
+                        commit=format_commit(commit)))
 
-        self._send_message_to_all('push', project, msg, branch=branch_name)
+                url = "{project_url}/compare/{before}...{after}".format(
+                    project_url=project_url, before=ref_before[:8], after=ref_after[:8])
+
+            link = "[{project}] {url}".format(project=project, url=url)
+            self._send_message_to_all('push', project, *msgs, link, branch=branch_name)
 
     def _handle_issue(self, json_params):
         http_server_logger.info('handling issue')
@@ -186,7 +195,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                        project_name=project_name, url=url))
 
         self._send_message_to_all(
-            hook_key, project, msg, 'issue', issue_number)
+            hook_key, project, msg, kind='issue', number=issue_number)
 
     def _handle_merge_request(self, json_params):
         http_server_logger.info('handling merge_request')
@@ -255,7 +264,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                        project_name=project_name, url=url))
 
         self._send_message_to_all(
-            hook_key, project, msg, 'merge_request', request_number,
+            hook_key, project, msg, kind='merge_request', number=request_number,
             is_wip=request_wip)
 
     @staticmethod
@@ -267,7 +276,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         verb = verb + 'd'
         return verb
 
-    def _send_message_to_all(self, hook_key, project, msg,
+    def _send_message_to_all(self, hook_key, project, *msgs,
                              kind=None, number=None, branch=None,
                              is_wip=False):
         hooks = self.server.hooks
@@ -287,7 +296,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                     if hook_key in reports[r]:
                         http_server_logger.info('sending to %s, in network %s'
                                                 % (r, network))
-                        bot.connection.privmsg(r, msg)
+                        for msg in msgs:
+                            bot.connection.privmsg(r, msg)
                         if kind and number:
                             bot._update_mentions(r, kind, number)
 
