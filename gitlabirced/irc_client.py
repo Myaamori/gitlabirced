@@ -2,6 +2,8 @@ import irc.strings
 import irc.client
 import irc.bot
 
+import ib3.auth
+
 import logging
 import threading
 import time
@@ -14,21 +16,13 @@ irc_client_logger = logging.getLogger(__name__)
 
 
 class MyIRCClient(irc.bot.SingleServerIRCBot):
-    def __init__(self, channels, nickname, server, net_name, port=6667,
-                 watchers=None, nickpass=None, auth_type=None, ssl_conn=False):
-
-        saslpass = nickpass
-        if auth_type and auth_type.lower() != 'sasl':
-            saslpass = None
-        spec = irc.bot.ServerSpec(server, port, saslpass)
-
+    def __init__(self, net_name, watchers=None, ssl_conn=False, **kwargs):
         if ssl_conn:
-            ssl_factory = irc.connection.Factory(wrapper=ssl.wrap_socket)
-            irc.bot.SingleServerIRCBot.__init__(
-                self, [spec], nickname, nickname, connect_factory=ssl_factory)
+            connect_factory = irc.connection.Factory(wrapper=ssl.wrap_socket)
         else:
-            irc.bot.SingleServerIRCBot.__init__(
-                self, [spec], nickname, nickname)
+            connect_factory = irc.connection.Factory()
+
+        super().__init__(connect_factory=connect_factory, **kwargs)
 
         # Monkey patch process_forever with a custom loop that we can stop
         def process_forever(timeout=0.2):
@@ -39,13 +33,7 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
         self.reactor.process_forever = process_forever
 
         self._stop_process_forever = False
-        self.channels_to_join = channels
-        self.nickname = nickname
-        self.nickpass = nickpass
-        self.auth_type = auth_type
-        self.server = server
         self.net_name = net_name
-        self.port = port
         self.watchers = watchers
         self.last_mention = {}
         self.count_per_channel = {}
@@ -90,17 +78,6 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
         if not self.ping_configured:
             connection.set_keepalive(10)
             self.ping_configured = True
-
-        if self.nickpass:
-            if (not self.auth_type) or self.auth_type.lower() == 'nickserv':
-                connection.privmsg('NickServ', 'IDENTIFY {password}'.format(
-                    password=self.nickpass))
-
-        self._join_channels(connection)
-
-    def _join_channels(self, connection):
-        for ch in self.channels_to_join:
-            connection.join(ch)
 
     def on_nochanmodes(self, connection, event):
         # We couldn't join a channel, wait and retry
@@ -223,6 +200,20 @@ class MyIRCClient(irc.bot.SingleServerIRCBot):
             )
         return data.status_code, data.json()
 
+class SASLBot(ib3.auth.SASL, MyIRCClient):
+    pass
+
+class NickservBot(ib3.auth.NickServ, MyIRCClient):
+    pass
+
+class NoAuthBot(ib3.mixins.JoinChannels, MyIRCClient):
+    def __init__(self, ident_password, channels, **kwargs):
+        super().__init__(**kwargs)
+        self._channels = channels
+
+    def on_welcome(self, *args, **kwargs):
+        super().on_welcome(*args, **kwargs)
+        self.join_channels(self._channels)
 
 def connect_networks(networks, watchers):
     """ Connects to all the networks configured in the config file.
@@ -239,13 +230,26 @@ def connect_networks(networks, watchers):
         nick = networks[net]['nick']
         channels = networks[net]['channels']
         password = networks[net].get('pass')
+        auth_pass = networks[net].get('auth_pass')
         auth_type = networks[net].get('auth')
         ssl_conn = networks[net].get('ssl', False)
 
+        if auth_type == 'sasl':
+            client_class = SASLBot
+        elif auth_type == 'nickserv':
+            client_class = NickservBot
+        else:
+            client_class = NoAuthBot
+
+        server_spec = irc.bot.ServerSpec(server, port, password)
+
         # TODO: Only use password if auth is set to 'sasl'
-        bot = MyIRCClient(channels, nick, server, net, port=port,
-                          watchers=watchers, nickpass=password,
-                          auth_type=auth_type, ssl_conn=ssl_conn)
+        bot = client_class(server_list=[server_spec],
+                           nickname=nick, realname=nick,
+                           net_name=net,
+                           ident_password=auth_pass,
+                           channels=channels,
+                           ssl_conn=ssl_conn)
         irc_client_logger.info('Starting client for server %s' % server)
         thread = threading.Thread(target=bot.start)
         thread.start()
