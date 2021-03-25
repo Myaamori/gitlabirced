@@ -1,5 +1,5 @@
 irc==17.1
 click==6.7
 requests==2.21.0
-PyYAML==5.1.1
+PyYAML==5.4
 ib3==0.2.0
